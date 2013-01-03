@@ -16,6 +16,7 @@
 #include <pwd.h>
 
 #include "crontab.h"
+#include "config.h"
 
 #define ENABLE_FEATURE_CROND_D 0
 
@@ -67,4 +68,17 @@ struct globals {
 /* level >= 20 is "error" */
 #define ERR20 "\x14"
 
+static const char DowAry[] ALIGN1 =
+	"sun""mon""tue""wed""thu""fri""sat"
+;
+
+static const char MonAry[] ALIGN1 =
+	"jan""feb""mar""apr""may""jun""jul""aug""sep""oct""nov""dec"
+;
+
+
+#define ARRAY_SIZE(x) ((unsigned)(sizeof(x) / sizeof((x)[0])))
+void* xmalloc(size_t size) FAST_FUNC RETURNS_MALLOC;
+void *xzalloc(size_t size) FAST_FUNC RETURNS_MALLOC;
+char *xstrdup(const char *s) FAST_FUNC RETURNS_MALLOC;
 #endif

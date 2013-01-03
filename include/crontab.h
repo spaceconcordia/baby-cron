@@ -1,9 +1,15 @@
 #ifndef CRONTAB_H
 #define CRONTAB_H
 
+#include <sys/stat.h>
+
 extern "C" {
     #include "platform.h"
 }
+
+#ifndef MAXLINES
+# define MAXLINES       256  /* max lines in non-root crontabs */
+#endif
 
 void ParseField(char *user, char *ary, int modvalue, int off, const char *names, char *ptr);
 
@@ -31,6 +37,5 @@ typedef struct CronLine {
 	char cl_Days[32];               /* 1-31 */
 	char cl_Mins[60];               /* 0-59 */
 } CronLine;
-
 
 #endif
