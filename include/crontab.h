@@ -1,7 +1,11 @@
 #ifndef CRONTAB_H
 #define CRONTAB_H
 
-#include "platform.h"
+extern "C" {
+    #include "platform.h"
+}
+
+void ParseField(char *user, char *ary, int modvalue, int off, const char *names, char *ptr);
 
 typedef struct CronFile {
 	struct CronFile *cf_next;

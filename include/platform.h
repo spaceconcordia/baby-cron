@@ -5,7 +5,7 @@
  * Licensed under GPLv2 or later, see file LICENSE in this source tree.
  */
 #ifndef BB_PLATFORM_H
-#define BB_PLATFORM_H 1
+#define BB_PLATFORM_H
 
 
 /* Convenience macros to test the version of gcc. */
@@ -456,7 +456,11 @@ typedef unsigned smalluint;
  */
 
 #ifndef HAVE_DPRINTF
-extern int dprintf(int fd, const char *format, ...);
+    #ifdef __cplusplus
+        extern "C" { int dprintf(int fd, const char *format, ...); }
+    #else 
+        extern int dprintf(int fd, const char *format, ...);
+    #endif
 #endif
 
 #ifndef HAVE_MEMRCHR

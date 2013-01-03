@@ -1,7 +1,7 @@
 #include "baby-cron.h"
 #include "crontab.h"
 
-static void ParseField(char *user, char *ary, int modvalue, int off,
+void ParseField(char *user, char *ary, int modvalue, int off,
 				const char *names, char *ptr)
 /* 'names' is a pointer to a set of 3-char abbreviations */
 {
