@@ -1,12 +1,15 @@
 #include "CppUTest/TestHarness.h"
 #include "crontab.h"
 #include "config.h"
+#include "config-stub.h"
 #include <string.h>
 #include <algorithm>
+#include <sys/stat.h>
 
 static const int BUFFER_SIZE = 10;
 static char zeroOutBuffer[BUFFER_SIZE];
 static char user[5] = "root";
+
 
 TEST_GROUP(CronTab) {
 	void setup() {
@@ -73,6 +76,60 @@ TEST(CronTab, ParseField_InvalidToken_BufferIsNotChanged) {
     }
 }
 
+
 TEST(CronTab, LoadCronTab_ValidFile_ReturnCronTabStruct) {
-    FAIL("Implement me!");
+    /* Init memory for dependency injector */
+    char *line = (char*)malloc(sizeof(char) * 18);
+    strcpy(line, "1 1 1 1 1 command");
+
+    char **tokens;
+    tokens    = (char**)malloc(sizeof(char*) * 6);
+    tokens[0] = (char*)malloc(sizeof(char) * 2);
+    tokens[1] = (char*)malloc(sizeof(char) * 2);
+    tokens[2] = (char*)malloc(sizeof(char) * 2);
+    tokens[3] = (char*)malloc(sizeof(char) * 2);
+    tokens[4] = (char*)malloc(sizeof(char) * 2);
+    tokens[5] = (char*)malloc(sizeof(char) * 8);
+
+    strcpy(tokens[0], "1");
+    strcpy(tokens[1], "1");
+    strcpy(tokens[2], "1");
+    strcpy(tokens[3], "1");
+    strcpy(tokens[4], "1");
+    strcpy(tokens[5], "command");
+
+    /* Inject DI */
+    set_config(tokens, line); //No need to free, done internally by config_read
+
+    CronLine *actual      = (CronLine*)malloc(sizeof(CronLine));
+    char expectedDow[6]   = {0, 1, 0, 0, 0, 0};
+    char expectedMons[12] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    char expectedHrs[24]  = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0};
+    char expectedDays[31] = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0};
+    char expectedMins[60] ={ 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+    load_crontab("root");
+    actual = G.cron_files->cf_lines;
+
+    CHECK(std::equal(actual->cl_Dow,  actual->cl_Dow  + 6,  expectedDow));
+    CHECK(std::equal(actual->cl_Mons, actual->cl_Mons + 12, expectedMons));
+    CHECK(std::equal(actual->cl_Hrs,  actual->cl_Hrs  + 24, expectedHrs));
+    CHECK(std::equal(actual->cl_Days, actual->cl_Days + 31, expectedDays));
+    CHECK(std::equal(actual->cl_Mins, actual->cl_Mins + 60, expectedMins));
+    STRCMP_EQUAL(actual->cl_cmd, "command");
+
+    for(int i = 0; i != 6; i++) {
+        free(tokens[i]);
+    }
+    free(tokens);
 }
