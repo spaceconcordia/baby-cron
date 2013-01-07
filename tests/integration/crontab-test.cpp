@@ -5,6 +5,12 @@
 #include <algorithm>
 #include <sys/stat.h>
 
+const int DOW  = 6;
+const int MONS = 12;
+const int HRS  = 24;
+const int DAYS = 31;
+const int MINS = 60;
+
 //position starts from 0
 void clearAndSet(char* array, int len, char value, int position) {
     memset(array, 0, len);
@@ -21,69 +27,131 @@ TEST_GROUP(CronTab) {
 TEST(CronTab, LoadCronTab_ValidFileOneLine_ReturnCronTabStruct) {
     CronLine* actual = (CronLine *)malloc(sizeof(CronLine));
 
-    char expectedDow[6]   = {0};
-    char expectedMons[12] = {0};
-    char expectedHrs[24]  = {0};
-    char expectedDays[31] = {0};
-    char expectedMins[60] = {0};
+    char expectedDow[DOW]   = {0};
+    char expectedMons[MONS] = {0};
+    char expectedHrs[HRS]   = {0};
+    char expectedDays[DAYS] = {0};
+    char expectedMins[MINS] = {0};
  
     load_crontab("crontab-oneline");
 
     actual = G.cron_files->cf_lines;
-    clearAndSet(expectedDow,   6, 1, 1);
-    clearAndSet(expectedMons, 12, 1, 0); //Months values have an offset of -1
-    clearAndSet(expectedHrs,  24, 1, 1);
-    clearAndSet(expectedDays, 31, 1, 1);
-    clearAndSet(expectedMins, 60, 1, 1);
+    clearAndSet(expectedDow,   DOW, 1, 1);
+    clearAndSet(expectedMons, MONS, 1, 0); //Months values have an offset of -1
+    clearAndSet(expectedHrs,   HRS, 1, 1);
+    clearAndSet(expectedDays, DAYS, 1, 1);
+    clearAndSet(expectedMins, MINS, 1, 1);
 
-    CHECK(std::equal(actual->cl_Dow,  actual->cl_Dow  + 6,  expectedDow));
-    CHECK(std::equal(actual->cl_Mons, actual->cl_Mons + 12, expectedMons));
-    CHECK(std::equal(actual->cl_Hrs,  actual->cl_Hrs  + 24, expectedHrs));
-    CHECK(std::equal(actual->cl_Days, actual->cl_Days + 31, expectedDays));
-    CHECK(std::equal(actual->cl_Mins, actual->cl_Mins + 60, expectedMins));
+    CHECK(std::equal(actual->cl_Dow,  actual->cl_Dow  + DOW,  expectedDow));
+    CHECK(std::equal(actual->cl_Mons, actual->cl_Mons + MONS, expectedMons));
+    CHECK(std::equal(actual->cl_Hrs,  actual->cl_Hrs  + HRS,  expectedHrs));
+    CHECK(std::equal(actual->cl_Days, actual->cl_Days + DAYS, expectedDays));
+    CHECK(std::equal(actual->cl_Mins, actual->cl_Mins + MINS, expectedMins));
     STRCMP_EQUAL(actual->cl_cmd, "command");
 }
 
 TEST(CronTab, LoadCronTab_ValidFileTwoLines_ReturnCronTabStruct) {
     CronLine* actual = (CronLine *)malloc(sizeof(CronLine));
 
-    char expectedDow[6]   = {0};
-    char expectedMons[12] = {0};
-    char expectedHrs[24]  = {0};
-    char expectedDays[31] = {0};
-    char expectedMins[60] = {0};
- 
+    char expectedDow[DOW]   = {0};
+    char expectedMons[MONS] = {0};
+    char expectedHrs[HRS]   = {0};
+    char expectedDays[DAYS] = {0};
+    char expectedMins[MINS] = {0};
+
     load_crontab("crontab-twolines");
 
     // First line
     actual = G.cron_files->cf_lines;
-    clearAndSet(expectedDow,   6, 1, 1);
-    clearAndSet(expectedMons, 12, 1, 0); //Months values have an offset of -1
-    clearAndSet(expectedHrs,  24, 1, 1);
-    clearAndSet(expectedDays, 31, 1, 1);
-    clearAndSet(expectedMins, 60, 1, 1);
+    clearAndSet(expectedDow,   DOW, 1, 1);
+    clearAndSet(expectedMons, MONS, 1, 0); //Months values have an offset of -1
+    clearAndSet(expectedHrs,   HRS, 1, 1);
+    clearAndSet(expectedDays, DAYS, 1, 1);
+    clearAndSet(expectedMins, MINS, 1, 1);
 
-    CHECK(std::equal(actual->cl_Dow,  actual->cl_Dow  + 6,  expectedDow));
-    CHECK(std::equal(actual->cl_Mons, actual->cl_Mons + 12, expectedMons));
-    CHECK(std::equal(actual->cl_Hrs,  actual->cl_Hrs  + 24, expectedHrs));
-    CHECK(std::equal(actual->cl_Days, actual->cl_Days + 31, expectedDays));
-    CHECK(std::equal(actual->cl_Mins, actual->cl_Mins + 60, expectedMins));
+    CHECK(std::equal(actual->cl_Dow,  actual->cl_Dow  + DOW,  expectedDow));
+    CHECK(std::equal(actual->cl_Mons, actual->cl_Mons + MONS, expectedMons));
+    CHECK(std::equal(actual->cl_Hrs,  actual->cl_Hrs  + HRS,  expectedHrs));
+    CHECK(std::equal(actual->cl_Days, actual->cl_Days + DAYS, expectedDays));
+    CHECK(std::equal(actual->cl_Mins, actual->cl_Mins + MINS, expectedMins));
     STRCMP_EQUAL(actual->cl_cmd, "command");
 
     // Second line
     actual = (G.cron_files->cf_lines->cl_next);
-    clearAndSet(expectedDow,   6, 1, 2);
-    clearAndSet(expectedMons, 12, 1, 1); //Months values have an offset of -1
-    clearAndSet(expectedHrs,  24, 1, 2);
-    clearAndSet(expectedDays, 31, 1, 2);
-    clearAndSet(expectedMins, 60, 1, 2);
-
-    CHECK(std::equal(actual->cl_Dow,  actual->cl_Dow  + 6,  expectedDow));
-    CHECK(std::equal(actual->cl_Mons, actual->cl_Mons + 12, expectedMons));
-    CHECK(std::equal(actual->cl_Hrs,  actual->cl_Hrs  + 24, expectedHrs));
-    CHECK(std::equal(actual->cl_Days, actual->cl_Days + 31, expectedDays));
-    CHECK(std::equal(actual->cl_Mins, actual->cl_Mins + 60, expectedMins));
+    clearAndSet(expectedDow,   DOW, 1, 2);
+    clearAndSet(expectedMons, MONS, 1, 1); //Months values have an offset of -1
+    clearAndSet(expectedHrs,   HRS, 1, 2);
+    clearAndSet(expectedDays, DAYS, 1, 2);
+    clearAndSet(expectedMins, MINS, 1, 2); 
+ 
+    CHECK(std::equal(actual->cl_Dow,  actual->cl_Dow  + DOW,  expectedDow));
+    CHECK(std::equal(actual->cl_Mons, actual->cl_Mons + MONS, expectedMons));
+    CHECK(std::equal(actual->cl_Hrs,  actual->cl_Hrs  + HRS,  expectedHrs));
+    CHECK(std::equal(actual->cl_Days, actual->cl_Days + DAYS, expectedDays));
+    CHECK(std::equal(actual->cl_Mins, actual->cl_Mins + MINS, expectedMins));
     STRCMP_EQUAL(actual->cl_cmd, "command2");
 }
 
+TEST(CronTab, LoadCronTab_FileWithOneInvalidLine_ReturnCronTabStruct) {
+    CronLine* actual = (CronLine *)malloc(sizeof(CronLine));
+
+    char expectedDow[DOW]   = {0};
+    char expectedMons[MONS] = {0};
+    char expectedHrs[HRS]   = {0};
+    char expectedDays[DAYS] = {0};
+    char expectedMins[MINS] = {0};
+
+    load_crontab("crontab-valid-invalid-valid-lines");
+
+    // First line
+    actual = G.cron_files->cf_lines;
+    clearAndSet(expectedDow,   DOW, 1, 1);
+    clearAndSet(expectedMons, MONS, 1, 0); //Months values have an offset of -1
+    clearAndSet(expectedHrs,   HRS, 1, 1);
+    clearAndSet(expectedDays, DAYS, 1, 1);
+    clearAndSet(expectedMins, MINS, 1, 1);
+
+    CHECK(std::equal(actual->cl_Dow,  actual->cl_Dow  + DOW,  expectedDow));
+    CHECK(std::equal(actual->cl_Mons, actual->cl_Mons + MONS, expectedMons));
+    CHECK(std::equal(actual->cl_Hrs,  actual->cl_Hrs  + HRS,  expectedHrs));
+    CHECK(std::equal(actual->cl_Days, actual->cl_Days + DAYS, expectedDays));
+    CHECK(std::equal(actual->cl_Mins, actual->cl_Mins + MINS, expectedMins));
+    STRCMP_EQUAL(actual->cl_cmd, "command");
+
+    // Second line
+    actual = (G.cron_files->cf_lines->cl_next);
+    bzero(expectedDow,  DOW);
+    bzero(expectedMons, MONS); 
+    bzero(expectedHrs,  HRS);
+    bzero(expectedDays, DAYS);
+    bzero(expectedMins, MINS);
+
+    CHECK(std::equal(actual->cl_Dow,  actual->cl_Dow  + DOW,  expectedDow));
+    CHECK(std::equal(actual->cl_Mons, actual->cl_Mons + MONS, expectedMons));
+    CHECK(std::equal(actual->cl_Hrs,  actual->cl_Hrs  + HRS,  expectedHrs));
+    CHECK(std::equal(actual->cl_Days, actual->cl_Days + DAYS, expectedDays));
+    CHECK(std::equal(actual->cl_Mins, actual->cl_Mins + MINS, expectedMins));
+
+    //Command is still read correctly, even though it's useless
+    STRCMP_EQUAL(actual->cl_cmd, "nope"); 
+
+    // Third line
+    actual = (G.cron_files->cf_lines->cl_next->cl_next);
+    clearAndSet(expectedDow,   DOW, 1, 2);
+    clearAndSet(expectedMons, MONS, 1, 1); //Months values have an offset of -1
+    clearAndSet(expectedHrs,   HRS, 1, 2);
+    clearAndSet(expectedDays, DAYS, 1, 2);
+    clearAndSet(expectedMins, MINS, 1, 2);
+
+    CHECK(std::equal(actual->cl_Dow,  actual->cl_Dow  + DOW,  expectedDow));
+    CHECK(std::equal(actual->cl_Mons, actual->cl_Mons + MONS, expectedMons));
+    CHECK(std::equal(actual->cl_Hrs,  actual->cl_Hrs  + HRS,  expectedHrs));
+    CHECK(std::equal(actual->cl_Days, actual->cl_Days + DAYS, expectedDays));
+    CHECK(std::equal(actual->cl_Mins, actual->cl_Mins + MINS, expectedMins));
+    STRCMP_EQUAL(actual->cl_cmd, "command2");
+}
+
+TEST(CronTab, RescanCronTabDir_ValidFile_ReturnCronFileStruct) {
+    FAIL("Do me!");
+}
 

@@ -83,6 +83,6 @@ static const char MonAry[] ALIGN1 =
 
 void ParseField(char *user, char *ary, int modvalue, int off, const char *names, char *ptr);
 void load_crontab(const char *filename);
-
+static void rescan_crontab_dir(void);
 
 #endif

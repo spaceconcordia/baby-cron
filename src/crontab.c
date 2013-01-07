@@ -1,6 +1,7 @@
 #include "baby-cron.h"
 #include "crontab.h"
 #include "config.h"
+#include <dirent.h>
 
 char bb_common_bufsiz1[COMMON_BUFSIZE] ALIGNED(sizeof(long long));
 
@@ -230,7 +231,7 @@ struct parser_t *parser;
     maxLines = (strcmp(fileName, "root") == 0) ? 65535 : MAXLINES;
 
 	fstat(fileno(parser->fp), &sbuf);
-    sbuf.st_uid = 0;
+    //sbuf.st_uid = 0;
     if  (sbuf.st_uid == DAEMON_UID) {
 		CronFile *file = (CronFile*) xzalloc(sizeof(CronFile));
 		CronLine **pline;
@@ -300,3 +301,27 @@ struct parser_t *parser;
 	
 	config_close(parser);
 }
+
+static void rescan_crontab_dir(void)
+{	
+	/* Re-chdir, in case directory was renamed & deleted */
+	if (chdir(G.crontab_dir_name) < 0) {
+		//crondlog(DIE9 "chdir(%s)", G.crontab_dir_name); TODO: use shakespeare
+	}
+
+	/* Scan directory and add associated users */
+	{
+		DIR *dir = opendir(".");
+		struct dirent *den;
+
+		//if (!dir) crondlog(DIE9 "chdir(%s)", "."); /* exits */ TODO: use shakespeare 
+		while ((den = readdir(dir)) != NULL) {
+			if (strchr(den->d_name, '.') != NULL) {
+				continue;
+			}
+			load_crontab(den->d_name);
+		}
+		closedir(dir);
+	}
+}
+
