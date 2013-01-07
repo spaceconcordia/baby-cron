@@ -1,5 +1,8 @@
 #include "baby-cron.h"
 #include "crontab.h"
+#include "config.h"
+
+char bb_common_bufsiz1[COMMON_BUFSIZE] ALIGNED(sizeof(long long));
 
 // Die if we can't copy a string to freshly allocated memory.
 char* FAST_FUNC xstrdup(const char *s)
@@ -27,6 +30,18 @@ void* FAST_FUNC xmalloc(size_t size)
 	return ptr;
 }
 
+
+// Die if we can't resize previously allocated memory.  (This returns a pointer
+// to the new memory, which may or may not be the same as the old memory.
+// It'll copy the contents to a new chunk and free the old one if necessary.)
+void* FAST_FUNC xrealloc(void *ptr, size_t size)
+{
+	ptr = realloc(ptr, size);
+	if (ptr == NULL && size != 0) {
+//		bb_error_msg_and_die(bb_msg_memory_exhausted);
+    }
+	return ptr;
+}
 
 // Die if we can't allocate and zero size bytes of memory.
 void* FAST_FUNC xzalloc(size_t size)
@@ -175,30 +190,48 @@ static void FixDayDow(CronLine *line)
 	}
 }
 
+FILE* FAST_FUNC fopen_or_warn(const char *path, const char *mode)
+{
+	FILE *fp = fopen(path, mode);
+	if (!fp) {
+//		bb_simple_perror_msg(path); TODO: log with shakespeare
+		//errno = 0; /* why? */
+	}
+	return fp;
+}
+
+FILE* FAST_FUNC fopen_or_warn_stdin(const char *filename)
+{
+	FILE *fp = stdin;
+
+	if (filename != bb_msg_standard_input
+	 && NOT_LONE_DASH(filename)
+	) {
+		fp = fopen_or_warn(filename, "r");
+	}
+	return fp;
+}
+
 void load_crontab(const char *fileName)
 {
-	struct parser_t *parser;
+
+struct parser_t *parser;
 	struct stat sbuf;
 	int maxLines;
-	char *tokens[6];
+	char **tokens= (char**)malloc(sizeof(char*)*6);
 #if ENABLE_FEATURE_CROND_CALL_SENDMAIL
 	char *mailTo = NULL;
 #endif
-
-	//delete_cronfile(fileName); TODO: Why???
-
-	if (!getpwnam(fileName)) {
-	//	crondlog(LVL7 "ignoring file '%s' (no such user)", fileName); TODO:Replace by shakespeare
-		return;
-	}
 
 	parser = config_open(fileName);
 	if (!parser)
 		return;
 
-	maxLines = (strcmp(fileName, "root") == 0) ? 65535 : MAXLINES;
+    maxLines = (strcmp(fileName, "root") == 0) ? 65535 : MAXLINES;
 
-	if (fstat(fileno(parser->fp), &sbuf) == 0 && sbuf.st_uid == DAEMON_UID) {
+	fstat(fileno(parser->fp), &sbuf);
+    sbuf.st_uid = 0;
+    if  (sbuf.st_uid == DAEMON_UID) {
 		CronFile *file = (CronFile*) xzalloc(sizeof(CronFile));
 		CronLine **pline;
 		int n;
@@ -211,11 +244,14 @@ void load_crontab(const char *fileName)
 
 			if (!--maxLines)
 				break;
+
 			n = config_read(parser, tokens, 6, 1, "# \t", PARSE_NORMAL | PARSE_KEEP_COPY);
+
 			if (!n)
 				break;
 
-			//if (DebugOpt) { crondlog(LVL5 "user:%s entry:%s", fileName, parser->data); } //replace by shakespeare
+			//if (DebugOpt)
+				//crondlog(LVL5 "user:%s entry:%s", fileName, parser->data);
 
 			/* check if line is setting MAILTO= */
 			if (0 == strncmp(tokens[0], "MAILTO=", 7)) {
@@ -225,7 +261,7 @@ void load_crontab(const char *fileName)
 #endif /* otherwise just ignore such lines */
 				continue;
 			}
-			//check if a minimum of tokens is specified 
+			 // check if a minimum of tokens is specified 
 			if (n < 6)
 				continue;
 			*pline = line = (CronLine*)xzalloc(sizeof(*line));
@@ -246,9 +282,9 @@ void load_crontab(const char *fileName)
 #endif
 			/* copy command */
 			line->cl_cmd = xstrdup(tokens[5]);
-			if (DebugOpt) {
-			//	crondlog(LVL5 " command:%s", tokens[5]); TODO:Replace by shakespeare
-			}
+			/*if (DebugOpt) {
+				crondlog(LVL5 " command:%s", tokens[5]);
+			}*/
 			pline = &line->cl_next;
 //bb_error_msg("M[%s]F[%s][%s][%s][%s][%s][%s]", mailTo, tokens[0], tokens[1], tokens[2], tokens[3], tokens[4], tokens[5]);
 		}
@@ -257,9 +293,10 @@ void load_crontab(const char *fileName)
 		file->cf_next = G.cron_files;
 		G.cron_files = file;
 
-		if (maxLines == 0) {
-			//crondlog(WARN9 "user %s: too many lines", fileName); //Replace by shakespear
-		}
+		/*if (maxLines == 0) {
+			crondlog(WARN9 "user %s: too many lines", fileName);
+		}*/
 	}
+	
 	config_close(parser);
 }

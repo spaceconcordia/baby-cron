@@ -2,16 +2,22 @@
 #define CRONTAB_H
 
 #include <sys/stat.h>
+#include <stdio.h> //For BUFSIZ
 
 extern "C" {
     #include "platform.h"
+
 }
 
 #ifndef MAXLINES
 # define MAXLINES       256  /* max lines in non-root crontabs */
 #endif
 
-void ParseField(char *user, char *ary, int modvalue, int off, const char *names, char *ptr);
+#define DAEMON_UID 0
+
+#define NOT_LONE_DASH(s) ((s)[0] != '-' || (s)[1])
+
+const char bb_msg_standard_input[] ALIGN1 = "standard input";
 
 typedef struct CronFile {
 	struct CronFile *cf_next;
@@ -37,5 +43,46 @@ typedef struct CronLine {
 	char cl_Days[32];               /* 1-31 */
 	char cl_Mins[60];               /* 0-59 */
 } CronLine;
+
+enum { COMMON_BUFSIZE = (BUFSIZ >= 256*sizeof(void*) ? BUFSIZ+1 : 256*sizeof(void*)) };
+extern char bb_common_bufsiz1[COMMON_BUFSIZE]; //Defined in crontab.c because it was causing definition clashes in the test file
+
+struct globals {
+	unsigned log_level; /* = 8; */
+	time_t crontab_dir_mtime;
+	const char *log_filename;
+	const char *crontab_dir_name; /* = CRONTABS; */
+	CronFile *cron_files;
+#if SETENV_LEAKS
+	char *env_var_user;
+	char *env_var_home;
+#endif
+} FIX_ALIASING;
+#define G (*(struct globals*)&bb_common_bufsiz1)
+#define INIT_G() do { \
+	G.log_level = 8; \
+	G.crontab_dir_name = CRONTABS; \
+} while (0)
+
+/* 0 is the most verbose, default 8 */
+#define LVL5  "\x05"
+#define LVL7  "\x07"
+#define LVL8  "\x08"
+#define WARN9 "\x49"
+#define DIE9  "\xc9"
+/* level >= 20 is "error" */
+#define ERR20 "\x14"
+
+static const char DowAry[] ALIGN1 =
+	"sun""mon""tue""wed""thu""fri""sat"
+;
+
+static const char MonAry[] ALIGN1 =
+	"jan""feb""mar""apr""may""jun""jul""aug""sep""oct""nov""dec"
+;
+
+void ParseField(char *user, char *ary, int modvalue, int off, const char *names, char *ptr);
+void load_crontab(const char *filename);
+
 
 #endif

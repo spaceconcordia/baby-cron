@@ -1,8 +1,9 @@
-#ifndef CONFIG_STUB_H
-#define CONFIG_STUB_H
+#ifndef CONFIG_H
+#define CONFIG_H
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "platform.h"
 
 #define ENABLE_FEATURE_CROND_D 0
 
@@ -36,7 +37,7 @@ int config_read(parser_t *parser, char **tokens, unsigned flags, const char *del
 #define config_read(parser, tokens, max, min, str, flags) \
 	config_read(parser, tokens, ((flags) | (((min) & 0xFF) << 8) | ((max) & 0xFF)), str)
 
-void config_close(parser_t *parser);
-parser_t* config_open(const char *filename);
+void config_close(parser_t *parser) FAST_FUNC;
+parser_t* config_open(const char *filename) FAST_FUNC;
 
 #endif

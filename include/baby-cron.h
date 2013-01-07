@@ -15,13 +15,9 @@
 #include <sys/types.h>
 #include <pwd.h>
 
-#include "crontab.h"
 #include "config.h"
 
 #define ENABLE_FEATURE_CROND_D 0
-
-enum { COMMON_BUFSIZE = (BUFSIZ >= 256*sizeof(void*) ? BUFSIZ+1 : 256*sizeof(void*)) };
-char bb_common_bufsiz1[COMMON_BUFSIZE] ALIGNED(sizeof(long long));
 
 #define DAEMON_UID 0
 
@@ -41,44 +37,12 @@ enum {
 #endif
 
 
-struct globals {
-	unsigned log_level; /* = 8; */
-	time_t crontab_dir_mtime;
-	const char *log_filename;
-	const char *crontab_dir_name; /* = CRONTABS; */
-	CronFile *cron_files;
-#if SETENV_LEAKS
-	char *env_var_user;
-	char *env_var_home;
-#endif
-} FIX_ALIASING;
-#define G (*(struct globals*)&bb_common_bufsiz1)
-#define INIT_G() do { \
-	G.log_level = 8; \
-	G.crontab_dir_name = CRONTABS; \
-} while (0)
-
-
-/* 0 is the most verbose, default 8 */
-#define LVL5  "\x05"
-#define LVL7  "\x07"
-#define LVL8  "\x08"
-#define WARN9 "\x49"
-#define DIE9  "\xc9"
-/* level >= 20 is "error" */
-#define ERR20 "\x14"
-
-static const char DowAry[] ALIGN1 =
-	"sun""mon""tue""wed""thu""fri""sat"
-;
-
-static const char MonAry[] ALIGN1 =
-	"jan""feb""mar""apr""may""jun""jul""aug""sep""oct""nov""dec"
-;
-
-
 #define ARRAY_SIZE(x) ((unsigned)(sizeof(x) / sizeof((x)[0])))
 void* xmalloc(size_t size) FAST_FUNC RETURNS_MALLOC;
 void *xzalloc(size_t size) FAST_FUNC RETURNS_MALLOC;
+void *xrealloc(void *old, size_t size) FAST_FUNC;
 char *xstrdup(const char *s) FAST_FUNC RETURNS_MALLOC;
+
+FILE* fopen_or_warn(const char *filename, const char *mode) FAST_FUNC;
+FILE* fopen_or_warn_stdin(const char *filename) FAST_FUNC;
 #endif
