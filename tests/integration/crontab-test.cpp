@@ -4,6 +4,7 @@
 */
 
 #include "CppUTest/TestHarness.h"
+#include "baby-cron.h"
 #include "crontab.h"
 #include "config.h"
 #include <string.h>
@@ -169,7 +170,7 @@ TEST(CronTab, RescanCronTabDir_FileFound_ReturnCronFileStruct) {
 }
 
 TEST(CronTab, RescanCronTabDir_FileNotFound_DoesNotReturnCronFileStruct) {
-    #undef CRONTABS
+    #undef CRONThBS
     #define CRONTABS "/home/spaceconcordia/space/baby-cron/tests/crontabs/empty"
 
     INIT_G();
@@ -177,3 +178,13 @@ TEST(CronTab, RescanCronTabDir_FileNotFound_DoesNotReturnCronFileStruct) {
     CHECK(G.cron_files == NULL);
 }
 
+TEST(CronTab, StartJobs_SingleJob_ReturnPid) {
+    #undef CRONThBS
+    #define CRONTABS "/home/spaceconcordia/space/baby-cron/tests/crontabs/empty"
+
+    INIT_G();
+    rescan_crontab_dir();
+
+//    start_jobs();
+    FAIL("Do me!");
+}

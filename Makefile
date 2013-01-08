@@ -11,4 +11,4 @@ buildBin:
 buildUnitTests:
 	$(CC) $(CFLAGS) $(DEBUGFLAGS) $(INCPATH) $(INCSTUBPATH) $(LIBPATH) -include./tests/unit/stubs/file-stub.h src/crontab.c tests/unit/stubs/*.cpp tests/unit/*.cpp -o bin/AllUnitTests $(LIBS)
 buildIntegrationTests:
-	$(CC) $(CFLAGS) $(DEBUGFLAGS) $(INCPATH) $(LIBPATH) src/config.c src/crontab.c tests/integration/*.cpp -o bin/AllIntegrationTests $(LIBS)
+	$(CC) $(CFLAGS) $(DEBUGFLAGS) $(INCPATH) $(LIBPATH) src/*.c tests/integration/*.cpp -o bin/AllIntegrationTests $(LIBS)

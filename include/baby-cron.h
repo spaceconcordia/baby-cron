@@ -16,6 +16,9 @@
 #include <pwd.h>
 
 #include "config.h"
+#include "crontab.h"
+
+#define DEFAULT_SHELL "-/bin/sh"
 
 #define ENABLE_FEATURE_CROND_D 0
 
@@ -36,6 +39,14 @@ enum {
 # define DebugOpt 0
 #endif
 
+/* glibc frees previous setenv'ed value when we do next setenv()
+ * of the same variable. uclibc does not do this! */
+#if (defined(__GLIBC__) && !defined(__UCLIBC__)) /* || OTHER_SAFE_LIBC... */
+# define SETENV_LEAKS 0
+#else
+# define SETENV_LEAKS 1
+#endif
+
 
 #define ARRAY_SIZE(x) ((unsigned)(sizeof(x) / sizeof((x)[0])))
 void* xmalloc(size_t size) FAST_FUNC RETURNS_MALLOC;
@@ -45,4 +56,7 @@ char *xstrdup(const char *s) FAST_FUNC RETURNS_MALLOC;
 
 FILE* fopen_or_warn(const char *filename, const char *mode) FAST_FUNC;
 FILE* fopen_or_warn_stdin(const char *filename) FAST_FUNC;
+
+void start_one_job(const char *user, CronLine *line);
+void start_jobs(void);
 #endif

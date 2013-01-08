@@ -2,3 +2,6 @@ bin/
 *.swp
 *.swo
 *~
+tests/jobs/hang
+tests/jobs/success
+tests/jobs/fail
