@@ -302,7 +302,7 @@ struct parser_t *parser;
 	config_close(parser);
 }
 
-static void rescan_crontab_dir(void)
+void rescan_crontab_dir(void)
 {	
 	/* Re-chdir, in case directory was renamed & deleted */
 	if (chdir(G.crontab_dir_name) < 0) {

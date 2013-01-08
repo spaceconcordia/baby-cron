@@ -1,3 +1,8 @@
+/*
+* Note: Make sure the owner of the crontab files is root or tests will
+* randomly crash or seg. fault.
+*/
+
 #include "CppUTest/TestHarness.h"
 #include "crontab.h"
 #include "config.h"
@@ -21,6 +26,7 @@ void clearAndSet(char* array, int len, char value, int position) {
 
 TEST_GROUP(CronTab) {
 	void setup() {
+        chdir("/home/spaceconcordia/space/baby-cron/tests");
 	}
 };
 
@@ -151,7 +157,23 @@ TEST(CronTab, LoadCronTab_FileWithOneInvalidLine_ReturnCronTabStruct) {
     STRCMP_EQUAL(actual->cl_cmd, "command2");
 }
 
-TEST(CronTab, RescanCronTabDir_ValidFile_ReturnCronFileStruct) {
-    FAIL("Do me!");
+TEST(CronTab, RescanCronTabDir_FileFound_ReturnCronFileStruct) {
+    #undef CRONTABS
+    #define CRONTABS "/home/spaceconcordia/space/baby-cron/tests/crontabs"    
+
+    INIT_G();
+    rescan_crontab_dir();
+    CHECK(G.cron_files != NULL);
+    CHECK(G.cron_files->cf_lines != NULL);
+    STRCMP_EQUAL(G.cron_files->cf_username, "babycronjobs");
+}
+
+TEST(CronTab, RescanCronTabDir_FileNotFound_DoesNotReturnCronFileStruct) {
+    #undef CRONTABS
+    #define CRONTABS "/home/spaceconcordia/space/baby-cron/tests/crontabs/empty"
+
+    INIT_G();
+    rescan_crontab_dir();
+    CHECK(G.cron_files == NULL);
 }
 

@@ -47,6 +47,8 @@ typedef struct CronLine {
 enum { COMMON_BUFSIZE = (BUFSIZ >= 256*sizeof(void*) ? BUFSIZ+1 : 256*sizeof(void*)) };
 extern char bb_common_bufsiz1[COMMON_BUFSIZE]; //Defined in crontab.c because it was causing definition clashes in the test file
 
+#define CRONTABS "/crontabs"
+
 struct globals {
 	unsigned log_level; /* = 8; */
 	time_t crontab_dir_mtime;
@@ -83,6 +85,6 @@ static const char MonAry[] ALIGN1 =
 
 void ParseField(char *user, char *ary, int modvalue, int off, const char *names, char *ptr);
 void load_crontab(const char *filename);
-static void rescan_crontab_dir(void);
+void rescan_crontab_dir(void);
 
 #endif
