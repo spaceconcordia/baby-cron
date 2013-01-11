@@ -101,7 +101,6 @@ TEST(CronTab, LoadCronTab_ValidFile_ReturnCronTabStruct) {
     /* Inject DI */
     set_config(tokens, line); //No need to free, done internally by config_read
 
-    CronLine *actual      = (CronLine*)malloc(sizeof(CronLine));
     char expectedDow[6]   = {0, 1, 0, 0, 0, 0};
     char expectedMons[12] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     char expectedHrs[24]  = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -119,7 +118,7 @@ TEST(CronTab, LoadCronTab_ValidFile_ReturnCronTabStruct) {
                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     load_crontab("root");
-    actual = G.cron_files->cf_lines;
+    CronLine* actual = G.cron_files->cf_lines;
 
     CHECK(std::equal(actual->cl_Dow,  actual->cl_Dow  + 6,  expectedDow));
     CHECK(std::equal(actual->cl_Mons, actual->cl_Mons + 12, expectedMons));
@@ -132,4 +131,14 @@ TEST(CronTab, LoadCronTab_ValidFile_ReturnCronTabStruct) {
         free(tokens[i]);
     }
     free(tokens);
+}
+
+TEST(CronTab, FlagStartingPosition_IsAboutTimeToStart_ReturnCronLineWithBitsSet) {
+    CronLine *actual;
+
+    FAIL("Do me");
+}
+
+TEST(CronTab, FlagStartingPosition_IsNotTimeToStart_ReturnCronLineWithBitsNotSet) {
+    FAIL("Do me");
 }

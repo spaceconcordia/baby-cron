@@ -170,7 +170,7 @@ TEST(CronTab, RescanCronTabDir_FileFound_ReturnCronFileStruct) {
 }
 
 TEST(CronTab, RescanCronTabDir_FileNotFound_DoesNotReturnCronFileStruct) {
-    #undef CRONThBS
+    #undef CRONTABS
     #define CRONTABS "/home/spaceconcordia/space/baby-cron/tests/crontabs/empty"
 
     INIT_G();
@@ -179,12 +179,19 @@ TEST(CronTab, RescanCronTabDir_FileNotFound_DoesNotReturnCronFileStruct) {
 }
 
 TEST(CronTab, StartJobs_SingleJob_ReturnPid) {
-    #undef CRONThBS
-    #define CRONTABS "/home/spaceconcordia/space/baby-cron/tests/crontabs/empty"
+    #undef CRONTABS
+    #define CRONTABS "/home/spaceconcordia/space/baby-cron/tests/crontabs/single"
 
     INIT_G();
     rescan_crontab_dir();
 
-//    start_jobs();
-    FAIL("Do me!");
+    //We're cheating, forcing the start
+    G.cron_files->cf_wants_starting = 1;
+    G.cron_files->cf_lines->cl_pid = -1;
+
+    start_jobs();
+    CHECK(G.cron_files->cf_lines->cl_pid > 0);
+    printf("%d", G.cron_files->cf_lines->cl_pid);
+    CHECK(G.cron_files->cf_wants_starting == 0);
+    CHECK(G.cron_files->cf_has_running == 1);
 }

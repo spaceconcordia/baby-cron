@@ -1,6 +1,6 @@
 alias 1='make buildUnitTests && ./bin/AllUnitTests'
 alias 2='make buildIntegrationTests && ./bin/AllIntegrationTests'
-alias 3='gdb bin/AllUnittests -tui'
+alias 3='gdb bin/AllUnitTests -tui'
 alias 4='gdb bin/AllIntegrationTests -tui'
 alias 5='vim tests/unit/crontab-test.cpp'
 alias 6='vim tests/integration/crontab-test.cpp'

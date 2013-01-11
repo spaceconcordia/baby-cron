@@ -64,6 +64,7 @@ struct globals {
 #define INIT_G() do { \
 	G.log_level = 8; \
 	G.crontab_dir_name = CRONTABS; \
+    G.cron_files = NULL; \
 } while (0)
 
 /* 0 is the most verbose, default 8 */
