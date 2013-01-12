@@ -315,7 +315,7 @@ void rescan_crontab_dir(void)
 		struct dirent *den;
 
 		//if (!dir) crondlog(DIE9 "chdir(%s)", "."); /* exits */ TODO: use shakespeare 
-		while ((den = readdir(dir)) != NULL) {
+		while ((den = readdir(dir)) != NULL) {                
 			if (strchr(den->d_name, '.') != NULL) {
 				continue;
 			}

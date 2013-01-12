@@ -11,17 +11,9 @@
 #include <algorithm>
 #include <sys/stat.h>
 
-const int DOW  = 6;
-const int MONS = 12;
-const int HRS  = 24;
-const int DAYS = 31;
-const int MINS = 60;
+#include "tests-helpers.h"
+#include "tests-globals.h"
 
-//position starts from 0
-void clearAndSet(char* array, int len, char value, int position) {
-    memset(array, 0, len);
-    *(array + position) = value;
-}
 
 //-------------------------------------------------------------------
 
@@ -191,7 +183,6 @@ TEST(CronTab, StartJobs_SingleJob_ReturnPid) {
 
     start_jobs();
     CHECK(G.cron_files->cf_lines->cl_pid > 0);
-    printf("%d", G.cron_files->cf_lines->cl_pid);
     CHECK(G.cron_files->cf_wants_starting == 0);
     CHECK(G.cron_files->cf_has_running == 1);
 }

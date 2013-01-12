@@ -6,6 +6,9 @@
 #include <algorithm>
 #include <sys/stat.h>
 
+#include "tests-helpers.h"
+#include "tests-globals.h"
+
 static const int BUFFER_SIZE = 10;
 static char zeroOutBuffer[BUFFER_SIZE];
 static char user[5] = "root";
@@ -101,22 +104,20 @@ TEST(CronTab, LoadCronTab_ValidFile_ReturnCronTabStruct) {
     /* Inject DI */
     set_config(tokens, line); //No need to free, done internally by config_read
 
-    char expectedDow[6]   = {0, 1, 0, 0, 0, 0};
-    char expectedMons[12] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    char expectedHrs[24]  = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0};
-    char expectedDays[31] = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0};
-    char expectedMins[60] ={ 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    /* Define expected variables */
+    char expectedDow[DOW]   = {0};
+    char expectedMons[MONS] = {0};
+    char expectedHrs[HRS]   = {0};
+    char expectedDays[DAYS] = {0};
+    char expectedMins[MINS] = {0};
 
+    clearAndSet(expectedDow,   DOW, 1, 1);
+    clearAndSet(expectedMons, MONS, 1, 0); //Months values have an offset of -1
+    clearAndSet(expectedHrs,   HRS, 1, 1);
+    clearAndSet(expectedDays, DAYS, 1, 1);
+    clearAndSet(expectedMins, MINS, 1, 1);
+
+    /* Start test */
     load_crontab("root");
     CronLine* actual = G.cron_files->cf_lines;
 
@@ -134,9 +135,36 @@ TEST(CronTab, LoadCronTab_ValidFile_ReturnCronTabStruct) {
 }
 
 TEST(CronTab, FlagStartingPosition_IsAboutTimeToStart_ReturnCronLineWithBitsSet) {
-    CronLine *actual;
+    char expectedDow[DOW]   = {0};
+    char expectedMons[MONS] = {0};
+    char expectedHrs[HRS]   = {0};
+    char expectedDays[DAYS] = {0};
+    char expectedMins[MINS] = {0};
 
+    clearAndSet(expectedDow,   DOW, 1, 1);
+    clearAndSet(expectedMons, MONS, 1, 0); //Months values have an offset of -1
+    clearAndSet(expectedHrs,   HRS, 1, 1);
+    clearAndSet(expectedDays, DAYS, 1, 1);
+    clearAndSet(expectedMins, MINS, 1, 1);
+
+
+    char *actual[6];
+
+    G.cron_files = (CronFile*)malloc(sizeof(CronFile));
+    G.cron_files->cf_lines = (CronLine*)malloc(sizeof(CronLine));
+
+    clearAndSet(G.cron_files->cf_lines->cl_Dow,  DOW,  0, 0);
+    clearAndSet(G.cron_files->cf_lines->cl_Mons, MONS, 0, 0);
+    clearAndSet(G.cron_files->cf_lines->cl_Hrs,  HRS,  0, 0);
+    clearAndSet(G.cron_files->cf_lines->cl_Days, DAYS, 0, 0);
+    clearAndSet(G.cron_files->cf_lines->cl_Mins, MINS, 0, 0);
+
+    free(G.cron_files->cf_lines);
+    free(G.cron_files);
+ 
     FAIL("Do me");
+
+
 }
 
 TEST(CronTab, FlagStartingPosition_IsNotTimeToStart_ReturnCronLineWithBitsNotSet) {
