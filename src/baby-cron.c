@@ -33,6 +33,60 @@ static void set_env_vars(struct passwd *pas)
 	/*setenv("SHELL", DEFAULT_SHELL, 1); - done earlier */
 }
 
+/*
+ * Determine which jobs need to be run.  Under normal conditions, the
+ * period is about a minute (one scan).  Worst case it will be one
+ * hour (60 scans).
+ */
+void flag_starting_jobs(time_t t1, time_t t2)
+{
+	time_t t;
+
+	/* Find jobs > t1 and <= t2 */
+
+	for (t = t1 - t1 % 60; t <= t2; t += 60) {
+		struct tm *ptm;
+		CronFile *file;
+		CronLine *line;
+
+		if (t <= t1)
+			continue;
+
+		ptm = localtime(&t);
+		for (file = G.cron_files; file; file = file->cf_next) {
+			//if (DebugOpt)
+				///crondlog(LVL5 "file %s:", file->cf_username);
+			if (file->cf_deleted)
+				continue;
+			for (line = file->cf_lines; line; line = line->cl_next) {
+//				if (DebugOpt)	
+//					crondlog(LVL5 " line %s", line->cl_cmd);
+				if (line->cl_Mins[ptm->tm_min]
+				 && line->cl_Hrs[ptm->tm_hour]
+				 && (line->cl_Days[ptm->tm_mday] || line->cl_Dow[ptm->tm_wday])
+				 && line->cl_Mons[ptm->tm_mon]
+				) {
+					if (DebugOpt) {
+						/*crondlog(LVL5 " job: %d %s",
+							(int)line->cl_pid, line->cl_cmd);*/
+                        //TODO: use shakespeare
+					}
+					if (line->cl_pid > 0) {
+                        /*
+						crondlog(LVL8 "user %s: process already running: %s",
+							file->cf_username, line->cl_cmd);
+                        */
+                        //TODO: use shakespeare
+					} else if (line->cl_pid == 0) {
+						line->cl_pid = -1;
+						file->cf_wants_starting = 1;
+				    }	
+				}
+			}
+		}
+	}
+}
+
 void start_one_job(const char *user, CronLine *line)
 {
 	struct passwd *pas;

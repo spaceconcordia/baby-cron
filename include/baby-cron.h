@@ -57,6 +57,7 @@ char *xstrdup(const char *s) FAST_FUNC RETURNS_MALLOC;
 FILE* fopen_or_warn(const char *filename, const char *mode) FAST_FUNC;
 FILE* fopen_or_warn_stdin(const char *filename) FAST_FUNC;
 
+void flag_starting_jobs(time_t t1, time_t t2);
 void start_one_job(const char *user, CronLine *line);
 void start_jobs(void);
 #endif

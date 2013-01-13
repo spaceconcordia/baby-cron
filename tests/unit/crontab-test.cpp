@@ -134,38 +134,7 @@ TEST(CronTab, LoadCronTab_ValidFile_ReturnCronTabStruct) {
     free(tokens);
 }
 
-TEST(CronTab, FlagStartingPosition_IsAboutTimeToStart_ReturnCronLineWithBitsSet) {
-    char expectedDow[DOW]   = {0};
-    char expectedMons[MONS] = {0};
-    char expectedHrs[HRS]   = {0};
-    char expectedDays[DAYS] = {0};
-    char expectedMins[MINS] = {0};
 
-    clearAndSet(expectedDow,   DOW, 1, 1);
-    clearAndSet(expectedMons, MONS, 1, 0); //Months values have an offset of -1
-    clearAndSet(expectedHrs,   HRS, 1, 1);
-    clearAndSet(expectedDays, DAYS, 1, 1);
-    clearAndSet(expectedMins, MINS, 1, 1);
-
-
-    char *actual[6];
-
-    G.cron_files = (CronFile*)malloc(sizeof(CronFile));
-    G.cron_files->cf_lines = (CronLine*)malloc(sizeof(CronLine));
-
-    clearAndSet(G.cron_files->cf_lines->cl_Dow,  DOW,  0, 0);
-    clearAndSet(G.cron_files->cf_lines->cl_Mons, MONS, 0, 0);
-    clearAndSet(G.cron_files->cf_lines->cl_Hrs,  HRS,  0, 0);
-    clearAndSet(G.cron_files->cf_lines->cl_Days, DAYS, 0, 0);
-    clearAndSet(G.cron_files->cf_lines->cl_Mins, MINS, 0, 0);
-
-    free(G.cron_files->cf_lines);
-    free(G.cron_files);
- 
-    FAIL("Do me");
-
-
-}
 
 TEST(CronTab, FlagStartingPosition_IsNotTimeToStart_ReturnCronLineWithBitsNotSet) {
     FAIL("Do me");
