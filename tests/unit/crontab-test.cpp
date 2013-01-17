@@ -134,8 +134,3 @@ TEST(CronTab, LoadCronTab_ValidFile_ReturnCronTabStruct) {
     free(tokens);
 }
 
-
-
-TEST(CronTab, FlagStartingPosition_IsNotTimeToStart_ReturnCronLineWithBitsNotSet) {
-    FAIL("Do me");
-}
