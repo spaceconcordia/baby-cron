@@ -13,9 +13,9 @@ TEST_GROUP(BabyCron) {
     void teardown() {}
 };
 
-TEST(BabyCron, StartJobs_SingleJob_ReturnPid) {
+TEST(BabyCron, StartJobs_OneJob_ReturnPid) {
     #undef CRONTABS
-    #define CRONTABS "/home/spaceconcordia/space/baby-cron/tests/crontabs/single"
+    #define CRONTABS "/home/spaceconcordia/space/baby-cron/tests/crontabs/one"
 
     INIT_G();
     rescan_crontab_dir();
