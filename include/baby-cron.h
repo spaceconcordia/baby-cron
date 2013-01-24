@@ -60,4 +60,5 @@ FILE* fopen_or_warn_stdin(const char *filename) FAST_FUNC;
 void flag_starting_jobs(time_t t1, time_t t2);
 void start_one_job(const char *user, CronLine *line);
 void start_jobs(void);
+int check_completions(void);
 #endif
