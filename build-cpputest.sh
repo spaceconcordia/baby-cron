@@ -22,6 +22,9 @@ popd
 echo "Compiling completed."
 echo "Copying files..."
 
+mkdir include
+mkdir lib
+
 cp -r $1/include/* ./include/
 cp $1/lib/libCppUTest.a ./lib
 cp $1/lib/libCppUTestExt.a ./lib

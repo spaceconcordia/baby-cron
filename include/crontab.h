@@ -32,6 +32,7 @@ typedef struct CronLine {
 	struct CronLine *cl_next;
 	char *cl_cmd;                   /* shell command */
 	pid_t cl_pid;                   /* >0:running, <0:needs to be started in this minute, 0:dormant */
+    int cl_failures;                   /* Number of times exited with a failure */
 #if ENABLE_FEATURE_CROND_CALL_SENDMAIL
 	int cl_empty_mail_size;         /* size of mail header only, 0 if no mailfile */
 	char *cl_mailto;                /* whom to mail results, may be NULL */

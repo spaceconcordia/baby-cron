@@ -140,6 +140,12 @@ void start_jobs(void)
 			if (line->cl_pid >= 0)
 				continue;
 
+            if (line->cl_failures >= 5) {
+                //TODO: Remove magic number
+                line->cl_pid = 0;
+                continue;
+            }
+
 			start_one_job(file->cf_username, line);
 			pid = line->cl_pid;
 			// TODO: use shakespeare crondlog(LVL8 "USER %s pid %3d cmd %s",
@@ -216,14 +222,31 @@ int check_completions(void)
 			if (line->cl_pid <= 0)
 				continue;
 
-			r = waitpid(line->cl_pid, NULL, WNOHANG);
+            int status;
+			r = waitpid(line->cl_pid, &status, WUNTRACED);
 			if (r < 0 || r == line->cl_pid) {
-				process_finished_job(file->cf_username, line);
-				if (line->cl_pid == 0) {
-					/* sendmail was not started for it */
-					continue;
-				}
-				/* else: sendmail was started, job is still running, fall thru */
+                if (WIFEXITED(status)) {
+                    if (WEXITSTATUS(status) == 0) {
+                            process_finished_job(file->cf_username, line);
+                            if (line->cl_pid == 0) {
+                                /* sendmail was not started for it */
+                                continue;
+                            }
+                            /* else: sendmail was started, job is still running, fall thru */
+                        }
+                        else {
+                            line->cl_failures += 1;
+                            if (line-> cl_failures > 5) {
+                                // TODO: Remove magic number
+                                line->cl_pid = 0;
+                                continue;
+                            }
+                            else {
+                                line->cl_pid = -1;
+				file->cf_wants_starting = 1;
+                            }
+                        }
+                }
 			}
 			/* else: r == 0: "process is still running" */
 			file->cf_has_running = 1;

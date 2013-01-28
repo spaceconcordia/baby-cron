@@ -5,6 +5,9 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <iostream>
+
+using namespace std;
 
 TEST_GROUP(BabyCron) {
     void setup() {
@@ -71,7 +74,50 @@ TEST(BabyCron, StartJobs_FailToStartJob_ReturnPidEqualsMinusOne) {
     LONGS_EQUAL(0, G.cron_files->cf_wants_starting);
 }
 
+TEST(BabyCron, StartJobs_FailExitJob_ReturnPidEqualsZeroFailuresEqualsFive) {
+    #undef CRONTABS
+    #define CRONTABS "/home/spaceconcordia/space/baby-cron/tests/crontabs/fail"
+
+    INIT_G();
+    rescan_crontab_dir();
+
+    //We're cheating, forcing the start
+    G.cron_files->cf_wants_starting = 1;
+    G.cron_files->cf_lines->cl_pid  = -1;
+
+    for(int i = 0; i != 5; i++) {
+        start_jobs();
+        
+        // Sometimes the Linux job scheduler doesn't have the time to 
+        // spot that the segfault job has exit hence why we call usleep
+        // and recheck again. All this is albitrary.
+        check_completions();
+        usleep(1);
+        check_completions();
+        usleep(1);
+        check_completions();
+
+        LONGS_EQUAL(-1, G.cron_files->cf_lines->cl_pid);
+        LONGS_EQUAL(i + 1, G.cron_files->cf_lines->cl_failures);
+    }
+
+    start_jobs();
+        
+    check_completions();
+    usleep(1);
+    check_completions();
+    usleep(1);
+    check_completions();
+
+    LONGS_EQUAL(0, G.cron_files->cf_lines->cl_pid);
+    LONGS_EQUAL(5, G.cron_files->cf_lines->cl_failures);
+}
+
 TEST(BabyCron, StartJobs_TimeoutJob_ReturnPidEqualsMinusOne) {
+    #undef CRONTABS
+    #define CRONTABS "/home/spaceconcordia/space/baby-cron/tests/crontabs/hang"
+
+
     FAIL("Do me!");
 }
 
@@ -86,18 +132,32 @@ TEST(BabyCron, StartJobs_CrashJob_ReturnPidEqualsZero) {
     G.cron_files->cf_wants_starting = 1;
     G.cron_files->cf_lines->cl_pid  = -1;
 
+    cout << endl << "** Should print 'Segmentation fault (core dumped)' 5 times" << endl;
+    for(int i = 0; i != 5; i++) {
+        start_jobs();
+       
+        // TODO: Refactor  
+        // Sometimes the Linux job scheduler doesn't have the time to 
+        // spot that the segfault job has exit hence why we call usleep
+        // and recheck again. All this is albitrary.
+        check_completions();
+        usleep(1);
+        check_completions();
+        usleep(1);
+        check_completions();
+
+        LONGS_EQUAL(-1, G.cron_files->cf_lines->cl_pid);
+        LONGS_EQUAL(i + 1, G.cron_files->cf_lines->cl_failures);
+    }
+
     start_jobs();
-
-
-    // Sometimes the Linux job scheduler doesn't have the time to 
-    // spot that the segfault job has exit hence why we call usleep
-    // and recheck again. All this is albitrary.
+        
     check_completions();
-    usleep(10);
+    usleep(1);
     check_completions();
-    usleep(10);
+    usleep(1);
     check_completions();
 
     LONGS_EQUAL(0, G.cron_files->cf_lines->cl_pid);
-    LONGS_EQUAL(0, G.cron_files->cf_has_running);
+    LONGS_EQUAL(5, G.cron_files->cf_lines->cl_failures);
 }

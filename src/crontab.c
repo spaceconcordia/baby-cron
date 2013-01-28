@@ -283,6 +283,7 @@ struct parser_t *parser;
 #endif
 			/* copy command */
 			line->cl_cmd = xstrdup(tokens[5]);
+            line->cl_failures = 0;
 			/*if (DebugOpt) {
 				crondlog(LVL5 " command:%s", tokens[5]);
 			}*/

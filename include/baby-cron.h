@@ -18,7 +18,7 @@
 #include "config.h"
 #include "crontab.h"
 
-#define DEFAULT_SHELL "-/bin/sh"
+#define DEFAULT_SHELL "/bin/sh"
 
 #define ENABLE_FEATURE_CROND_D 0
 
