@@ -212,6 +212,19 @@ static void process_finished_job(const char *user, CronLine *line)
 /*		line->cl_pid = fuork_job(user, mailFd, SENDMAIL, NULL);*/
 }
 
+
+void update_failures_state(CronFile *file, CronLine *line) {
+    line->cl_failures += 1;
+
+    if (line->cl_failures > MAX_FAILURES) {
+        line->cl_pid = 0;
+    }
+    else {
+        line->cl_pid = -1;
+		file->cf_wants_starting = 1;
+    }
+}
+
 int check_completions(void)
 {
 	CronFile *file;
@@ -236,63 +249,24 @@ int check_completions(void)
                 rtries -= 1;
             }
 
+            //waitpid returned an error or detected a state change in the pid
 			if (r < 0 || r == line->cl_pid) {
-                if (WIFEXITED(status)) {
-                    printf("exit");
-                    if (WEXITSTATUS(status) == 0) {
-                            printf("job finished?");
-                        process_finished_job(file->cf_username, line);
-                        if (line->cl_pid == 0) {
-                            /* sendmail was not started for it */
-                            continue;
-                        }
-                    /* else: sendmail was started, job is still running, fall thru */
-                    }
-                    else {
-                        line->cl_failures += 1;
-                        if (line-> cl_failures > 5) {
-                            // TODO: Remove magic number
-                                printf("remove cos of failure");
-                            line->cl_pid = 0;
-                            continue;
-                        }
-                        else {
-                            printf("failure detected");
-                            line->cl_pid = -1;
-				            file->cf_wants_starting = 1;
-                            continue; 
-                        }
-                    }
+                // exit(0) detected
+                if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+                    process_finished_job(file->cf_username, line);
+                        
+                   if (line->cl_pid == 0) { continue; }
                 }
-                else { //crashed
-line->cl_failures += 1;
-                        if (line-> cl_failures > 5) {
-                            // TODO: Remove magic number
-                            line->cl_pid = 0;
-                            continue;
-                        }
-                        else {
-                            printf("failure detected");
-                            line->cl_pid = -1;
-				            file->cf_wants_starting = 1;
-                            continue; 
-                        }
-                }
+                
+                // crashed or exit (not 0) detected
+                update_failures_state(file, line);
+                continue;
 			}
 
-            printf("in the else");
 			/* else: r == 0: "process is still running" */
             if (time(NULL) - line->cl_time_started > MAX_RUN_TIME_IN_SEC) {
                 kill(line->cl_pid, SIGKILL);
-                line->cl_failures += 1;
-                if (line-> cl_failures > 5) {
-                    // TODO: Remove magic number
-                    line->cl_pid = 0;
-                }
-                else {
-                    line->cl_pid = -1;
-				    file->cf_wants_starting = 1;
-                }
+                update_failures_state(file, line);
                 continue;
             }
 

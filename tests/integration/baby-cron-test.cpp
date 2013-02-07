@@ -98,7 +98,6 @@ TEST(BabyCron, StartJobs_FailExitJob_ReturnPidEqualsZeroFailuresEqualsFive) {
         usleep(1);
         check_completions();
 
-        cout << "i==" << i << endl;
         LONGS_EQUAL(-1, G.cron_files->cf_lines->cl_pid);
         LONGS_EQUAL(i + 1, G.cron_files->cf_lines->cl_failures);
     }
@@ -177,7 +176,6 @@ TEST(BabyCron, StartJobs_CrashJob_ReturnPidEqualsZero) {
         usleep(1);
         check_completions();
 
-        cout << "i = " << i << endl;
         LONGS_EQUAL(-1, G.cron_files->cf_lines->cl_pid);
         LONGS_EQUAL(i + 1, G.cron_files->cf_lines->cl_failures);
     }

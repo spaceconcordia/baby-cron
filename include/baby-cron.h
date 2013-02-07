@@ -19,6 +19,7 @@
 #include "crontab.h"
 
 #define MAX_RUN_TIME_IN_SEC 30
+#define MAX_FAILURES 5
 #define DEFAULT_SHELL "/bin/sh"
 
 #define ENABLE_FEATURE_CROND_D 0
