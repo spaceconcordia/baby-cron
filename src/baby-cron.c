@@ -1,5 +1,11 @@
+#include <errno.h>
 #include "baby-cron.h"
 #include "crontab.h"
+#include <time.h>
+#include <signal.h>
+#include <sys/types.h>
+
+unsigned long g_rtries = 1;
 
 #if SETENV_LEAKS
 /* We set environment *before* vfork (because we want to use vfork),
@@ -148,6 +154,7 @@ void start_jobs(void)
 
 			start_one_job(file->cf_username, line);
 			pid = line->cl_pid;
+            line->cl_time_started = time(NULL);
 			// TODO: use shakespeare crondlog(LVL8 "USER %s pid %3d cmd %s",
 				//file->cf_username, (int)pid, line->cl_cmd);
 			if (pid < 0) {
@@ -217,38 +224,78 @@ int check_completions(void)
 
 		file->cf_has_running = 0;
 		for (line = file->cf_lines; line; line = line->cl_next) {
-			int r;
-
 			if (line->cl_pid <= 0)
 				continue;
 
             int status;
-			r = waitpid(line->cl_pid, &status, WUNTRACED);
+            unsigned long rtries = g_rtries;
+			int r = waitpid(line->cl_pid, &status, WNOHANG);
+            
+            while (rtries > 0 && r == 0) {
+		    	r = waitpid(line->cl_pid, &status, WNOHANG);
+                rtries -= 1;
+            }
+
 			if (r < 0 || r == line->cl_pid) {
                 if (WIFEXITED(status)) {
+                    printf("exit");
                     if (WEXITSTATUS(status) == 0) {
-                            process_finished_job(file->cf_username, line);
-                            if (line->cl_pid == 0) {
-                                /* sendmail was not started for it */
-                                continue;
-                            }
-                            /* else: sendmail was started, job is still running, fall thru */
+                            printf("job finished?");
+                        process_finished_job(file->cf_username, line);
+                        if (line->cl_pid == 0) {
+                            /* sendmail was not started for it */
+                            continue;
+                        }
+                    /* else: sendmail was started, job is still running, fall thru */
+                    }
+                    else {
+                        line->cl_failures += 1;
+                        if (line-> cl_failures > 5) {
+                            // TODO: Remove magic number
+                                printf("remove cos of failure");
+                            line->cl_pid = 0;
+                            continue;
                         }
                         else {
-                            line->cl_failures += 1;
-                            if (line-> cl_failures > 5) {
-                                // TODO: Remove magic number
-                                line->cl_pid = 0;
-                                continue;
-                            }
-                            else {
-                                line->cl_pid = -1;
-				file->cf_wants_starting = 1;
-                            }
+                            printf("failure detected");
+                            line->cl_pid = -1;
+				            file->cf_wants_starting = 1;
+                            continue; 
+                        }
+                    }
+                }
+                else { //crashed
+line->cl_failures += 1;
+                        if (line-> cl_failures > 5) {
+                            // TODO: Remove magic number
+                            line->cl_pid = 0;
+                            continue;
+                        }
+                        else {
+                            printf("failure detected");
+                            line->cl_pid = -1;
+				            file->cf_wants_starting = 1;
+                            continue; 
                         }
                 }
 			}
+
+            printf("in the else");
 			/* else: r == 0: "process is still running" */
+            if (time(NULL) - line->cl_time_started > MAX_RUN_TIME_IN_SEC) {
+                kill(line->cl_pid, SIGKILL);
+                line->cl_failures += 1;
+                if (line-> cl_failures > 5) {
+                    // TODO: Remove magic number
+                    line->cl_pid = 0;
+                }
+                else {
+                    line->cl_pid = -1;
+				    file->cf_wants_starting = 1;
+                }
+                continue;
+            }
+
 			file->cf_has_running = 1;
 		}
 //FIXME: if !file->cf_has_running && file->deleted: delete it!
@@ -258,3 +305,8 @@ int check_completions(void)
 	return num_still_running;
 }
 
+//This function exists because we needed a way to add delay to waitpid
+//during integration test.
+void set_rtries_for_integration_tests(int rtries) {
+    g_rtries = rtries;
+}

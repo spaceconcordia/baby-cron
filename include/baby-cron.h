@@ -18,6 +18,7 @@
 #include "config.h"
 #include "crontab.h"
 
+#define MAX_RUN_TIME_IN_SEC 30
 #define DEFAULT_SHELL "/bin/sh"
 
 #define ENABLE_FEATURE_CROND_D 0
@@ -61,4 +62,5 @@ void flag_starting_jobs(time_t t1, time_t t2);
 void start_one_job(const char *user, CronLine *line);
 void start_jobs(void);
 int check_completions(void);
+void set_rtries_for_integration_tests(int rtries);
 #endif
