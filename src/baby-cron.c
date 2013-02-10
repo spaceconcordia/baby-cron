@@ -181,9 +181,9 @@ static void process_finished_job(const char *user, CronLine *line)
 		return;
 	}
 	//TODO: Remove mail stuff
-	/*if (line->cl_empty_mail_size <= 0) {
+	/*if (line->cl_empty_mail_size <= 0) { */
 		/* End of job and no mail file, or end of sendmail job */
-		return;
+		//return;
 	//}*/
 
 	/*
