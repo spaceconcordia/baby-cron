@@ -1,3 +1,8 @@
+/* 
+ * Modified version of crond from http://www.busybox.net/
+ *
+ * */
+
 #include "baby-cron.h"
 #include "crontab.h"
 #include "config.h"
