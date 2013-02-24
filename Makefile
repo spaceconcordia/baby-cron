@@ -7,6 +7,7 @@ INCPATH=-I./include/
 INCTESTPATH=-I./tests/unit/stubs/ -I./tests/helpers/include/
 LIBPATH=-L./lib/
 LIBS=-lCppUTest -lCppUTestExt
+#The test builds have their own main provided by CppUTest so we need to exclude baby-cron-main.c
 DEBUG_SRC_FILES =`find src/ ! -name 'baby-cron-main.c' -name '*.c'`
 
 buildBin:
