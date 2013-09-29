@@ -175,46 +175,12 @@ void start_jobs(void)
 static void process_finished_job(const char *user, CronLine *line)
 {
 	pid_t pid;
-	int mailFd;
-	char mailFile[128];
-	struct stat sbuf;
-
 	pid = line->cl_pid;
 	line->cl_pid = 0;
 	if (pid <= 0) {
 		/* No job */
 		return;
 	}
-	//TODO: Remove mail stuff
-	/*if (line->cl_empty_mail_size <= 0) { */
-		/* End of job and no mail file, or end of sendmail job */
-		//return;
-	//}*/
-
-	/*
-	 * End of primary job - check for mail file.
-	 * If size has changed and the file is still valid, we send it.
-	 
-	snprintf(mailFile, sizeof(mailFile), "%s/cron.%s.%d", TMPDIR, user, (int)pid);
-	mailFd = open(mailFile, O_RDONLY);
-	unlink(mailFile);
-	if (mailFd < 0) {
-		return;
-	}
-
-	if (fstat(mailFd, &sbuf) < 0
-	 || sbuf.st_uid != DAEMON_UID
-	 || sbuf.st_nlink != 0
-	 || sbuf.st_size == line->cl_empty_mail_size
-	 || !S_ISREG(sbuf.st_mode)
-	) {
-		close(mailFd);
-		return;
-	}
-	line->cl_empty_mail_size = 0; 
-	*/
-	/* if (line->cl_mailto) - always true if cl_empty_mail_size was nonzero */
-/*		line->cl_pid = fuork_job(user, mailFd, SENDMAIL, NULL);*/
 }
 
 
