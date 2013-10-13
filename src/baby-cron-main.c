@@ -1,9 +1,21 @@
 #include <crontab.h>
 #include <baby-cron.h>
-#include <string.h>
+#include <string>
+#include <cstring>
 #include <unistd.h>
 #include <time.h>
+#include "shakespeare.h"
+using namespace std;
+
 int main(void) {
+    string folder   = "/home/logs/";
+    string filename = get_filename(folder, "Baby-Cron.", ".log");
+    string filepath = folder + filename;
+    g_fp_log = fopen(filepath.c_str(), "a");
+    
+    Log(g_fp_log, NOTICE, "Baby-Cron", "Starting");
+    fflush(g_fp_log);
+
 	time_t t2;
 	int sleep_time;
 
@@ -44,6 +56,11 @@ int main(void) {
 	 		}
 	 	}
 	} /* for (;;) */
+
+    if (g_fp_log) {
+        fclose(g_fp_log);
+        g_fp_log = NULL;
+    }
 
     return 0;
 }

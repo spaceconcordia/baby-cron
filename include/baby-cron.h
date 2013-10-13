@@ -49,6 +49,7 @@ enum {
 # define SETENV_LEAKS 1
 #endif
 
+static FILE* g_fp_log;
 
 #define ARRAY_SIZE(x) ((unsigned)(sizeof(x) / sizeof((x)[0])))
 void* xmalloc(size_t size) FAST_FUNC RETURNS_MALLOC;
