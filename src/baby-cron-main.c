@@ -9,7 +9,7 @@
 using namespace std;
 
 int main(void) {
-    string folder   = "/home/jamg85/git/baby-cron/logs/";
+    string folder   = "/home/logs/";
     string filename = get_filename(folder, "Baby-Cron.", ".log");
     string filepath = folder + filename;
     g_fp_log = fopen(filepath.c_str(), "a");
