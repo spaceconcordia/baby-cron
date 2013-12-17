@@ -7,6 +7,30 @@
 #include "shakespeare.h"
 using namespace std;
 
+
+pid_t get_watch_puppy_pid() {
+    const int BUFFER_SIZE = 10;
+    string filename = "/home/pids/watch-puppy.pid";
+    char buffer[BUFFER_SIZE] = {0};
+    FILE* fp = fopen(filename.c_str(), "r");
+
+    if (fp != NULL) {
+        fread(buffer, BUFFER_SIZE, sizeof(char), fp);
+        fclose(fp);
+        return atoi(buffer);
+    } 
+    else {
+        return 0;
+    }
+}
+
+void signal_watch_puppy() {
+    pid_t pid = get_watch_puppy_pid();
+    if (pid > 0) { 
+        kill(pid, SIGUSR1);
+    }
+}
+
 int main(void) {
     string folder   = "/home/logs/";
     string filename = get_filename(folder, "Baby-Cron.", ".log");
@@ -36,6 +60,8 @@ int main(void) {
 	 	long dt;
 
 	 	t1 = t2;
+
+        signal_watch_puppy();
 
 	 	/* Synchronize to 1 minute, minimum 1 second */
 //	 	sleep(sleep_time - (time(NULL) % sleep_time) + 1);
