@@ -1,5 +1,6 @@
-#include <crontab.h>
+#define MAIN
 #include <baby-cron.h>
+#include <crontab.h>
 #include <string>
 #include <cstring>
 #include <unistd.h>
@@ -12,6 +13,7 @@ int main(void) {
     string filename = get_filename(folder, "Baby-Cron.", ".log");
     string filepath = folder + filename;
     g_fp_log = fopen(filepath.c_str(), "a");
+
     
     Log(g_fp_log, NOTICE, "Baby-Cron", "Starting");
     fflush(g_fp_log);

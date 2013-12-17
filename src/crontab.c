@@ -7,6 +7,7 @@
 #include "crontab.h"
 #include "config.h"
 #include <dirent.h>
+#include "shakespeare.h"
 
 char bb_common_bufsiz1[COMMON_BUFSIZE] ALIGNED(sizeof(long long));
 
@@ -158,7 +159,10 @@ void ParseField(char *user, char *ary, int modvalue, int off,
 
 	if (*ptr) {
  err:
-		//crondlog(WARN9 "user %s: parse error at %s", user, base); TODO:Replace by shakespear
+        char msg[LOG_BUFFER_SIZE];
+        sprintf(msg, "user %s: parse error at %s", user, base);
+        Log(g_fp_log, WARNING, "Baby-Cron", string(msg));
+        
 		return;
 	}
 
@@ -200,7 +204,10 @@ FILE* FAST_FUNC fopen_or_warn(const char *path, const char *mode)
 {
 	FILE *fp = fopen(path, mode);
 	if (!fp) {
-//		bb_simple_perror_msg(path); TODO: log with shakespeare
+        char msg[LOG_BUFFER_SIZE];
+        sprintf(msg, "Can't fopen the file : %s", path);
+        Log(g_fp_log, ERROR, "Baby-Cron", string(msg));
+
 		//errno = 0; /* why? */
 	}
 	return fp;
@@ -221,8 +228,8 @@ FILE* FAST_FUNC fopen_or_warn_stdin(const char *filename)
 void load_crontab(const char *fileName)
 {
 
-struct parser_t *parser;
-	struct stat sbuf;
+    struct parser_t *parser;
+    struct stat sbuf;
 	int maxLines;
 	char **tokens= (char**)malloc(sizeof(char*)*6);
 #if ENABLE_FEATURE_CROND_CALL_SENDMAIL
@@ -310,9 +317,12 @@ struct parser_t *parser;
 
 void rescan_crontab_dir(void)
 {	
+
 	/* Re-chdir, in case directory was renamed & deleted */
 	if (chdir(G.crontab_dir_name) < 0) {
-		//crondlog(DIE9 "chdir(%s)", G.crontab_dir_name); TODO: use shakespeare
+        char msg[LOG_BUFFER_SIZE];
+        sprintf(msg, "chdir(%s)", G.crontab_dir_name);
+        Log(g_fp_log, ERROR, "Baby-Cron", string(msg));
 	}
 
 	/* Scan directory and add associated users */
@@ -320,7 +330,14 @@ void rescan_crontab_dir(void)
 		DIR *dir = opendir(".");
 		struct dirent *den;
 
-		//if (!dir) crondlog(DIE9 "chdir(%s)", "."); /* exits */ TODO: use shakespeare 
+    
+        if (!dir){
+            char msg[LOG_BUFFER_SIZE];
+            sprintf(msg, "chdir(%s)", ".");
+            Log(g_fp_log, ERROR, "Baby-Cron", string(msg));
+            exit(-1);
+        }
+
 		while ((den = readdir(dir)) != NULL) {                
 			if (strchr(den->d_name, '.') != NULL) {
 				continue;
