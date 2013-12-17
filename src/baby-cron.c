@@ -9,6 +9,7 @@
 #include <time.h>
 #include <signal.h>
 #include <sys/types.h>
+#include "shakespeare.h"
 
 unsigned long g_rtries = 1;
 
@@ -78,16 +79,14 @@ void flag_starting_jobs(time_t t1, time_t t2)
 				 && line->cl_Mons[ptm->tm_mon]
 				) {
 					if (DebugOpt) {
-						/*crondlog(LVL5 " job: %d %s",
-							(int)line->cl_pid, line->cl_cmd);*/
-                        //TODO: use shakespeare
+                        char msg[LOG_BUFFER_SIZE];
+                        sprintf(msg, "job: %d %s", (int)line->cl_pid, line->cl_cmd);
+                        Log(g_fp_log, DEBUG, "Baby-Cron", string(msg));
 					}
 					if (line->cl_pid > 0) {
-                        /*
-						crondlog(LVL8 "user %s: process already running: %s",
-							file->cf_username, line->cl_cmd);
-                        */
-                        //TODO: use shakespeare
+                        char msg[LOG_BUFFER_SIZE];
+                        sprintf(msg, "user %s: process already running: %s", file->cf_username, line->cl_cmd);
+                        Log(g_fp_log, WARNING, "Baby-Cron", string(msg));
 					} else if (line->cl_pid == 0) {
 						line->cl_pid = -1;
 						file->cf_wants_starting = 1;
@@ -105,7 +104,9 @@ void start_one_job(const char *user, CronLine *line)
 
 	pas = getpwnam(user);
 	if (!pas) {
-		// crondlog(WARN9 "can't get uid for %s", user); TODO: use shakespeare
+        char msg[LOG_BUFFER_SIZE];
+        sprintf(msg, "can't get uid for %s", user);
+        Log(g_fp_log, WARNING, "Baby-Cron", string(msg));
 		goto err;
 	}
 
@@ -124,12 +125,18 @@ void start_one_job(const char *user, CronLine *line)
 		/* crond 3.0pl1-100 puts tasks in separate process groups */
 		bb_setpgrp();
 		execl(DEFAULT_SHELL, DEFAULT_SHELL, "-c", line->cl_cmd, (char *) NULL);
-//		crondlog(ERR20 "can't execute '%s' for user %s", DEFAULT_SHELL, user); TODO: use shakespeare
-		_exit(EXIT_SUCCESS);
+
+        char msg[LOG_BUFFER_SIZE];
+        sprintf(msg, "can't execute '%s' for user %s", DEFAULT_SHELL, user);
+        Log(g_fp_log, ERROR, "Baby-Cron", string(msg));
+		
+        _exit(EXIT_SUCCESS);
 	}
 	if (pid < 0) {
 		/* FORK FAILED */
-		//crondlog(ERR20 "can't vfork"); TODO: use shakespeare
+        char msg[LOG_BUFFER_SIZE];
+        sprintf(msg, "can't vfork");
+        Log(g_fp_log, ERROR, "Baby-Cron", string(msg));
  err:
 		pid = 0;
 	}
@@ -160,8 +167,11 @@ void start_jobs(void)
 			start_one_job(file->cf_username, line);
 			pid = line->cl_pid;
             line->cl_time_started = time(NULL);
-			// TODO: use shakespeare crondlog(LVL8 "USER %s pid %3d cmd %s",
-				//file->cf_username, (int)pid, line->cl_cmd);
+
+            char msg[LOG_BUFFER_SIZE];
+            sprintf(msg, "USER %s pid %3d cmd %s", file->cf_username, (int)pid, line->cl_cmd);
+            Log(g_fp_log, WARNING, "Baby-Cron", string(msg));
+
 			if (pid < 0) {
 				file->cf_wants_starting = 1;
 			}
