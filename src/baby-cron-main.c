@@ -8,7 +8,7 @@
 #include "shakespeare.h"
 #include <UpdaterClient.h>
 using namespace std;
-
+const int SLEEP_TIME = 15;
 
 pid_t get_watch_puppy_pid() {
     const int BUFFER_SIZE = 10;
@@ -44,7 +44,6 @@ int main(void) {
     fflush(g_fp_log);
 
 	time_t t2;
-	int sleep_time;
 
 	INIT_G();
 	
@@ -57,7 +56,6 @@ int main(void) {
 
 	// /* Main loop */
 	t2 = time(NULL);
-	sleep_time = 5;
 	for (;;) {
 	 	time_t t1;
 	 	long dt;
@@ -68,7 +66,7 @@ int main(void) {
 
 	 	/* Synchronize to 1 minute, minimum 1 second */
 //	 	sleep(sleep_time - (time(NULL) % sleep_time) + 1);
-        sleep(sleep_time);
+        sleep(SLEEP_TIME);
 
 	 	t2 = time(NULL);
 	 	dt = (long)t2 - (long)t1;
@@ -79,9 +77,6 @@ int main(void) {
 	 		start_jobs();
 	 		if (check_completions() > 0) {
 	 			/* some jobs are still running */
-	 			sleep_time = 3;
-	 		} else {
-	 			sleep_time = 3;
 	 		}
 	 	}
 	} /* for (;;) */
