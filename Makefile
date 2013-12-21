@@ -3,17 +3,18 @@ MICROCC=microblazeel-xilinx-linux-gnu-g++
 CFLAGS=-Wall
 MICROCFLAGS=-mcpu=v8.40.b -mxl-barrel-shift -mxl-multiply-high -mxl-pattern-compare -mno-xl-soft-mul -mno-xl-soft-div -mxl-float-sqrt -mhard-float -mxl-float-convert -mlittle-endian -Wall
 DEBUGFLAGS=-ggdb -g -gdwarf-2 -g3 #gdwarf-2 + g3 provides macro info to gdb
-INCPATH=-I./include/ -I../space-lib/inc/
+UPDATER_API_PATH = /home/spaceconcordia/space/space-updater-api
+INCPATH=-I./include/ -I../space-lib/shakespeare/inc/ -I$(UPDATER_API_PATH)/include
 INCTESTPATH=-I./tests/unit/stubs/ -I./tests/helpers/include/
-LIBPATH=-L./lib/ -L../space-lib/lib
+LIBPATH=-L./lib/ -L../space-lib/shakespeare/lib
 LIBS=-lCppUTest -lCppUTestExt
 #The test builds have their own main provided by CppUTest so we need to exclude baby-cron-main.c
 DEBUG_SRC_FILES =`find src/ ! -name 'baby-cron-main.c' -name '*.c'`
 
 buildBin:
-	$(CC) $(CFLAGS) $(INCPATH) $(LIBPATH) src/*.c -o bin/baby-cron -lshakespeare
+	$(CC) $(CFLAGS) $(INCPATH) $(LIBPATH) src/*.c $(UPDATER_API_PATH)/bin/UpdaterClient.o -o bin/baby-cron -lshakespeare
 buildQ6:
-	$(MICROCC) $(MICROCFLAGS) $(INCPATH) $(LIBPATH) src/*.c -o bin/baby-cron -lshakespeare-mbcc
+	$(MICROCC) $(MICROCFLAGS) $(INCPATH) $(LIBPATH) src/*.c $(UPDATER_API_PATH)/bin/UpdaterClient-Q6.o -o bin/baby-cron -lshakespeare-mbcc
 
 buildAllTests: buildUnitTests buildIntegrationTests
 buildUnitTests:

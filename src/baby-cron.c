@@ -10,6 +10,8 @@
 #include <signal.h>
 #include <sys/types.h>
 #include "shakespeare.h"
+#include <UpdaterClient.h>
+
 
 unsigned long g_rtries = 1;
 
@@ -97,10 +99,30 @@ void flag_starting_jobs(time_t t1, time_t t2)
 	}
 }
 
+static void process_finished_job(const char *user, CronLine *line)
+{
+	pid_t pid;
+	pid = line->cl_pid;
+	line->cl_pid = 0;
+	if (pid <= 0) {
+		/* No job */
+		return;
+	}
+}
+
 void start_one_job(const char *user, CronLine *line)
 {
 	struct passwd *pas;
 	pid_t pid;
+
+
+    FILE *file = fopen(line->cl_cmd, "r");
+    if (file == NULL) {
+        line->cl_pid = 0;
+        return;
+    }
+
+    fclose(file);
 
 	pas = getpwnam(user);
 	if (!pas) {
@@ -114,6 +136,7 @@ void start_one_job(const char *user, CronLine *line)
 	set_env_vars(pas);
 
 	/* Fork as the user in question and run program */
+    //signal(SIGCHLD, SIG_IGN); 
 	pid = vfork();
 	if (pid == 0) {
 		/* CHILD */
@@ -123,15 +146,33 @@ void start_one_job(const char *user, CronLine *line)
 			crondlog(LVL5 "child running %s", DEFAULT_SHELL);
 		}*/
 		/* crond 3.0pl1-100 puts tasks in separate process groups */
-		bb_setpgrp();
-		execl(DEFAULT_SHELL, DEFAULT_SHELL, "-c", line->cl_cmd, (char *) NULL);
+//		bb_setpgrp();
+
+
+        printf("About to execute %s\n", line->cl_cmd);
+        fflush(stdout);
+		//execl(DEFAULT_SHELL, DEFAULT_SHELL, "-c", line->cl_cmd, (char *) NULL);
+		execl(line->cl_cmd, (char *) NULL);
+
 
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "can't execute '%s' for user %s", DEFAULT_SHELL, user);
         Log(g_fp_log, ERROR, "Baby-Cron", string(msg));
 		
         _exit(EXIT_SUCCESS);
-	}
+	} else if (pid > 0) {
+        int status;
+		int r = waitpid(line->cl_pid, &status, WNOHANG); // prevent zombies
+        if (r == pid) {
+                printf("zombie r destroyed = %d\n", r);
+                fflush(stdout);
+                if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+                    process_finished_job(user, line);
+                        
+                    pid = 0;
+                }
+        }
+    }
 	if (pid < 0) {
 		/* FORK FAILED */
         char msg[LOG_BUFFER_SIZE];
@@ -155,10 +196,14 @@ void start_jobs(void)
 		file->cf_wants_starting = 0;
 		for (line = file->cf_lines; line; line = line->cl_next) {
 			pid_t pid;
-			if (line->cl_pid >= 0)
+		if (line->cl_pid >= 0)
 				continue;
 
-            if (line->cl_failures >= 5) {
+            printf("pid = %3d\n", line->cl_pid);
+            printf("failures = %d\n", line->cl_failures);
+            printf("cmd = %s\n", line->cl_cmd);
+            fflush(stdout);
+	        if (line->cl_failures > MAX_FAILURES) {
                 //TODO: Remove magic number
                 line->cl_pid = 0;
                 continue;
@@ -166,6 +211,10 @@ void start_jobs(void)
 
 			start_one_job(file->cf_username, line);
 			pid = line->cl_pid;
+
+            printf("pid returned = %3d\n", pid);
+            fflush(stdout);
+
             line->cl_time_started = time(NULL);
 
             char msg[LOG_BUFFER_SIZE];
@@ -182,16 +231,7 @@ void start_jobs(void)
 	}
 }
 
-static void process_finished_job(const char *user, CronLine *line)
-{
-	pid_t pid;
-	pid = line->cl_pid;
-	line->cl_pid = 0;
-	if (pid <= 0) {
-		/* No job */
-		return;
-	}
-}
+
 
 
 void update_failures_state(CronFile *file, CronLine *line) {
@@ -199,6 +239,38 @@ void update_failures_state(CronFile *file, CronLine *line) {
 
     if (line->cl_failures > MAX_FAILURES) {
         line->cl_pid = 0;
+        // Rollback here
+        // line->cl_cmd => /home/apps/current/space-commander/space-commander
+        
+        char path[100];
+        strcpy(path, line->cl_cmd);
+
+        if (strstr(path, "old/") != NULL){
+            strcpy(path, strstr(path, "old/") + 4);
+        }else if (strstr(path, "current/") != NULL){
+           strcpy(path, strstr(path, "current/") + 8); 
+        }
+
+        // Removes the filename from the path.
+        char* lastSlash = strrchr(path, '/');
+        *lastSlash  = '\0';
+
+        printf("[DEBUG] path to rollback : %s\n", path);
+        fflush(stdout);
+
+	    chdir("/home/apps/current/space-updater-api");          // Because sockets are created in the current directory.
+        
+        UpdaterClient client("sock_rollback");
+
+        client.Connect();
+
+        if (client.Rollback(path) == 0) {
+            line->cl_pid = -1;
+            line->cl_failures = 0;
+		    file->cf_wants_starting = 1;
+        }
+
+        client.Disconnect();
     }
     else {
         line->cl_pid = -1;
@@ -233,7 +305,12 @@ int check_completions(void)
             //waitpid returned an error or detected a state change in the pid
 			if (r < 0 || r == line->cl_pid) {
                 // exit(0) detected
+                printf("r = %d, pid = %d status = %d\n", r, line->cl_pid, status);
+                fflush(stdout);
+
                 if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+                    printf("exited with status");
+                    fflush(stdout);
                     process_finished_job(file->cf_username, line);
                         
                    if (line->cl_pid == 0) { continue; }
@@ -246,7 +323,16 @@ int check_completions(void)
 
 			/* else: r == 0: "process is still running" */
             if (time(NULL) - line->cl_time_started > MAX_RUN_TIME_IN_SEC) {
-                kill(line->cl_pid, SIGKILL);
+                int resultkill = kill(line->cl_pid, SIGKILL);
+               // int resultkill = 0;
+                char msg[LOG_BUFFER_SIZE];
+                sprintf(msg, "kill %d", line->cl_pid);
+                printf(msg);
+                fflush(stdout);
+                //execl(msg, (char*)NULL);
+
+                sprintf(msg, "failed %3d %3d %d", line->cl_pid, line->cl_failures, resultkill);
+                Log(g_fp_log, ERROR, "Baby-Cron", string(msg)); 
                 update_failures_state(file, line);
                 continue;
             }

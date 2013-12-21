@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <time.h>
 #include "shakespeare.h"
+#include <UpdaterClient.h>
 using namespace std;
 
 
@@ -56,7 +57,7 @@ int main(void) {
 
 	// /* Main loop */
 	t2 = time(NULL);
-	sleep_time = 60;
+	sleep_time = 5;
 	for (;;) {
 	 	time_t t1;
 	 	long dt;
@@ -78,9 +79,9 @@ int main(void) {
 	 		start_jobs();
 	 		if (check_completions() > 0) {
 	 			/* some jobs are still running */
-	 			sleep_time = 30;
+	 			sleep_time = 3;
 	 		} else {
-	 			sleep_time = 30;
+	 			sleep_time = 3;
 	 		}
 	 	}
 	} /* for (;;) */
