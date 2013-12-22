@@ -199,15 +199,16 @@ void start_jobs(void)
 		if (line->cl_pid >= 0)
 				continue;
 
-            printf("pid = %3d\n", line->cl_pid);
-            printf("failures = %d\n", line->cl_failures);
-            printf("cmd = %s\n", line->cl_cmd);
-            fflush(stdout);
-	        if (line->cl_failures > MAX_FAILURES) {
+            	        if (line->cl_failures > MAX_FAILURES) {
                 //TODO: Remove magic number
                 line->cl_pid = 0;
                 continue;
             }
+
+            printf("pid = %3d\n", line->cl_pid);
+            printf("failures = %d\n", line->cl_failures);
+            printf("cmd = %s\n", line->cl_cmd);
+            fflush(stdout);
 
 			start_one_job(file->cf_username, line);
 			pid = line->cl_pid;
