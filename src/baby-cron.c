@@ -1,4 +1,4 @@
-/* 
+/*
  * Modified version of crond from  http://www.busybox.net/
  *
  * */
@@ -73,7 +73,7 @@ void flag_starting_jobs(time_t t1, time_t t2)
 			if (file->cf_deleted)
 				continue;
 			for (line = file->cf_lines; line; line = line->cl_next) {
-//				if (DebugOpt)	
+//				if (DebugOpt)
 //					crondlog(LVL5 " line %s", line->cl_cmd);
 				if (line->cl_Mins[ptm->tm_min]
 				 && line->cl_Hrs[ptm->tm_hour]
@@ -83,16 +83,16 @@ void flag_starting_jobs(time_t t1, time_t t2)
 					if (DebugOpt) {
                         char msg[LOG_BUFFER_SIZE];
                         sprintf(msg, "job: %d %s", (int)line->cl_pid, line->cl_cmd);
-                        Log(g_fp_log, DEBUG, "Baby-Cron", string(msg));
+                        Shakespeare::log(g_fp_log, Shakespeare::DEBUG, "Baby-Cron", string(msg));
 					}
 					if (line->cl_pid > 0) {
                         char msg[LOG_BUFFER_SIZE];
                         sprintf(msg, "user %s: process already running: %s", file->cf_username, line->cl_cmd);
-                        Log(g_fp_log, WARNING, "Baby-Cron", string(msg));
+                        Shakespeare::log(g_fp_log, Shakespeare::WARNING, "Baby-Cron", string(msg));
 					} else if (line->cl_pid == 0) {
 						line->cl_pid = -1;
 						file->cf_wants_starting = 1;
-				    }	
+				    }
 				}
 			}
 		}
@@ -128,7 +128,7 @@ void start_one_job(const char *user, CronLine *line)
 	if (!pas) {
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "can't get uid for %s", user);
-        Log(g_fp_log, WARNING, "Baby-Cron", string(msg));
+        Shakespeare::log(g_fp_log, Shakespeare::WARNING, "Baby-Cron", string(msg));
 		goto err;
 	}
 
@@ -136,7 +136,7 @@ void start_one_job(const char *user, CronLine *line)
 	set_env_vars(pas);
 
 	/* Fork as the user in question and run program */
-    //signal(SIGCHLD, SIG_IGN); 
+    //signal(SIGCHLD, SIG_IGN);
 	pid = vfork();
 	if (pid == 0) {
 		/* CHILD */
@@ -157,8 +157,8 @@ void start_one_job(const char *user, CronLine *line)
 
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "can't execute '%s' for user %s", DEFAULT_SHELL, user);
-        Log(g_fp_log, ERROR, "Baby-Cron", string(msg));
-		
+        Shakespeare::log(g_fp_log, Shakespeare::ERROR, "Baby-Cron", string(msg));
+
         _exit(EXIT_SUCCESS);
 	} else if (pid > 0) {
         int status;
@@ -168,7 +168,7 @@ void start_one_job(const char *user, CronLine *line)
                 fflush(stdout);
                 if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
                     process_finished_job(user, line);
-                        
+
                     pid = 0;
                 }
         }
@@ -177,7 +177,7 @@ void start_one_job(const char *user, CronLine *line)
 		/* FORK FAILED */
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "can't vfork");
-        Log(g_fp_log, ERROR, "Baby-Cron", string(msg));
+        Shakespeare::log(g_fp_log, Shakespeare::ERROR, "Baby-Cron", string(msg));
  err:
 		pid = 0;
 	}
@@ -220,7 +220,7 @@ void start_jobs(void)
 
             char msg[LOG_BUFFER_SIZE];
             sprintf(msg, "USER %s pid %3d cmd %s", file->cf_username, (int)pid, line->cl_cmd);
-            Log(g_fp_log, WARNING, "Baby-Cron", string(msg));
+            Shakespeare::log(g_fp_log, Shakespeare::WARNING, "Baby-Cron", string(msg));
 
 			if (pid < 0) {
 				file->cf_wants_starting = 1;
@@ -242,14 +242,14 @@ void update_failures_state(CronFile *file, CronLine *line) {
         line->cl_pid = 0;
         // Rollback here
         // line->cl_cmd => /home/apps/current/space-commander/space-commander
-        
+
         char path[100];
         strcpy(path, line->cl_cmd);
 
         if (strstr(path, "old/") != NULL){
             strcpy(path, strstr(path, "old/") + 4);
         }else if (strstr(path, "current/") != NULL){
-           strcpy(path, strstr(path, "current/") + 8); 
+           strcpy(path, strstr(path, "current/") + 8);
         }
 
         // Removes the filename from the path.
@@ -260,7 +260,7 @@ void update_failures_state(CronFile *file, CronLine *line) {
         fflush(stdout);
 
 	    chdir("/home/apps/current/space-updater-api");          // Because sockets are created in the current directory.
-        
+
         UpdaterClient client("sock_rollback");
 
         client.Connect();
@@ -297,7 +297,7 @@ int check_completions(void)
             int status;
             unsigned long rtries = g_rtries;
 			int r = waitpid(line->cl_pid, &status, WNOHANG);
-            
+
             while (rtries > 0 && r == 0) {
 		    	r = waitpid(line->cl_pid, &status, WNOHANG);
                 rtries -= 1;
@@ -313,10 +313,10 @@ int check_completions(void)
                     printf("exited with status");
                     fflush(stdout);
                     process_finished_job(file->cf_username, line);
-                        
+
                    if (line->cl_pid == 0) { continue; }
                 }
-                
+
                 // crashed or exit (not 0) detected
                 update_failures_state(file, line);
                 continue;
@@ -333,7 +333,7 @@ int check_completions(void)
                 //execl(msg, (char*)NULL);
 
                 sprintf(msg, "failed %3d %3d %d", line->cl_pid, line->cl_failures, resultkill);
-                Log(g_fp_log, ERROR, "Baby-Cron", string(msg)); 
+                Shakespeare::log(g_fp_log, Shakespeare::ERROR, "Baby-Cron", string(msg));
                 update_failures_state(file, line);
                 continue;
             }

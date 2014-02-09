@@ -1,4 +1,4 @@
-/* 
+/*
  * Modified version of crond from http://www.busybox.net/
  *
  * */
@@ -161,8 +161,8 @@ void ParseField(char *user, char *ary, int modvalue, int off,
  err:
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "user %s: parse error at %s", user, base);
-        Log(g_fp_log, WARNING, "Baby-Cron", string(msg));
-        
+        Shakespeare::log(g_fp_log, Shakespeare::WARNING, "Baby-Cron", string(msg));
+
 		return;
 	}
 
@@ -170,7 +170,7 @@ void ParseField(char *user, char *ary, int modvalue, int off,
 		/* can't use crondlog, it inserts '\n' */
 		int i;
 		for (i = 0; i < modvalue; ++i)
-			fprintf(stderr, "%d", (unsigned char)ary[i]);		
+			fprintf(stderr, "%d", (unsigned char)ary[i]);
 	}
 }
 
@@ -206,7 +206,7 @@ FILE* FAST_FUNC fopen_or_warn(const char *path, const char *mode)
 	if (!fp) {
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "Can't fopen the file : %s", path);
-        Log(g_fp_log, ERROR, "Baby-Cron", string(msg));
+        Shakespeare::log(g_fp_log, Shakespeare::ERROR, "Baby-Cron", string(msg));
 
 		//errno = 0; /* why? */
 	}
@@ -274,7 +274,7 @@ void load_crontab(const char *fileName)
 #endif /* otherwise just ignore such lines */
 				continue;
 			}
-			 // check if a minimum of tokens is specified 
+			 // check if a minimum of tokens is specified
 			if (n < 6)
 				continue;
 			*pline = line = (CronLine*)xzalloc(sizeof(*line));
@@ -311,18 +311,18 @@ void load_crontab(const char *fileName)
 			crondlog(WARN9 "user %s: too many lines", fileName);
 		}*/
 	}
-	
+
 	config_close(parser);
 }
 
 void rescan_crontab_dir(void)
-{	
+{
 
 	/* Re-chdir, in case directory was renamed & deleted */
 	if (chdir(G.crontab_dir_name) < 0) {
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "chdir(%s)", G.crontab_dir_name);
-        Log(g_fp_log, ERROR, "Baby-Cron", string(msg));
+        Shakespeare::log(g_fp_log, Shakespeare::ERROR, "Baby-Cron", string(msg));
 	}
 
 	/* Scan directory and add associated users */
@@ -330,15 +330,15 @@ void rescan_crontab_dir(void)
 		DIR *dir = opendir(".");
 		struct dirent *den;
 
-    
+
         if (!dir){
             char msg[LOG_BUFFER_SIZE];
             sprintf(msg, "chdir(%s)", ".");
-            Log(g_fp_log, ERROR, "Baby-Cron", string(msg));
+            Shakespeare::log(g_fp_log, Shakespeare::ERROR, "Baby-Cron", string(msg));
             exit(-1);
         }
 
-		while ((den = readdir(dir)) != NULL) {                
+		while ((den = readdir(dir)) != NULL) {
 			if (strchr(den->d_name, '.') != NULL) {
 				continue;
 			}

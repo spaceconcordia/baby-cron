@@ -3,7 +3,7 @@ MICROCC=microblazeel-xilinx-linux-gnu-g++
 CFLAGS=-Wall
 MICROCFLAGS=-mcpu=v8.40.b -mxl-barrel-shift -mxl-multiply-high -mxl-pattern-compare -mno-xl-soft-mul -mno-xl-soft-div -mxl-float-sqrt -mhard-float -mxl-float-convert -mlittle-endian -Wall
 DEBUGFLAGS=-ggdb -g -gdwarf-2 -g3 #gdwarf-2 + g3 provides macro info to gdb
-UPDATER_API_PATH = /home/spaceconcordia/space/space-updater-api
+UPDATER_API_PATH = ../space-updater-api
 INCPATH=-I./include/ -I../space-lib/shakespeare/inc/ -I$(UPDATER_API_PATH)/include
 INCTESTPATH=-I./tests/unit/stubs/ -I./tests/helpers/include/
 LIBPATH=-L./lib/ -L../space-lib/shakespeare/lib

@@ -174,7 +174,7 @@ int config_read(parser_t *parser, char **tokens, unsigned flags, const char *del
 	if (t < mintokens) {
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "bad line %u: %d tokens found, %d needed", parser->lineno, t, mintokens);
-        Log(g_fp_log, ERROR, "Baby-Cron", string(msg));
+        Shakespeare::log(g_fp_log, Shakespeare::ERROR, "Baby-Cron", string(msg));
 
 		//if (flags & PARSE_MIN_DIE)
 		//	xfunc_die();

@@ -20,7 +20,7 @@ pid_t get_watch_puppy_pid() {
         fread(buffer, BUFFER_SIZE, sizeof(char), fp);
         fclose(fp);
         return atoi(buffer);
-    } 
+    }
     else {
         return 0;
     }
@@ -28,25 +28,21 @@ pid_t get_watch_puppy_pid() {
 
 void signal_watch_puppy() {
     pid_t pid = get_watch_puppy_pid();
-    if (pid > 0) { 
+    if (pid > 0) {
         kill(pid, SIGUSR1);
     }
 }
 
 int main(void) {
     string folder   = "/home/logs/";
-    string filename = get_filename(folder, "Baby-Cron.", ".log");
-    string filepath = folder + filename;
-    g_fp_log = fopen(filepath.c_str(), "a");
-
-    
-    Log(g_fp_log, NOTICE, "Baby-Cron", "Starting");
+    g_fp_log = Shakespeare::open_log(folder, "Baby-Cron");
+    Shakespeare::log(g_fp_log, Shakespeare::NOTICE, "Baby-Cron", "Starting");
     fflush(g_fp_log);
 
 	time_t t2;
 
 	INIT_G();
-	
+
 	//xchdir(G.crontab_dir_name);
 	//signal(SIGHUP, SIG_IGN); /* ? original crond dies on HUP... */
 	//xsetenv("SHELL", DEFAULT_SHELL); /* once, for all future children */
@@ -81,10 +77,6 @@ int main(void) {
 	 	}
 	} /* for (;;) */
 
-    if (g_fp_log) {
-        fclose(g_fp_log);
-        g_fp_log = NULL;
-    }
-
+    fclose(g_fp_log);
     return 0;
 }
