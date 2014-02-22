@@ -149,11 +149,10 @@ void start_one_job(const char *user, CronLine *line)
 //		bb_setpgrp();
 
 
-        printf("About to execute %s\n", line->cl_cmd);
+        Shakespeare::log(g_fp_log, Shakespeare::NOTICE,"About to execute "+ line->cl_cmd);
         fflush(stdout);
 		//execl(DEFAULT_SHELL, DEFAULT_SHELL, "-c", line->cl_cmd, (char *) NULL);
 		execl(line->cl_cmd, (char *) NULL);
-
 
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "can't execute '%s' for user %s", DEFAULT_SHELL, user);
@@ -205,9 +204,10 @@ void start_jobs(void)
                 continue;
             }
 
-            printf("pid = %3d\n", line->cl_pid);
-            printf("failures = %d\n", line->cl_failures);
-            printf("cmd = %s\n", line->cl_cmd);
+            //Shakespeare::log(g_fp_log, Shakespeare::NOTICE, "Baby-Cron", "pid=" + (string)line->cl_pid + ", failures =" + (string)line->cl_failures + ", cmd="+(string)line->cl_cmd);
+            //printf("pid = %3d\n", line->cl_pid);
+            //printf("failures = %d\n", line->cl_failures);
+            //printf("cmd = %s\n", line->cl_cmd);
             fflush(stdout);
 
 			start_one_job(file->cf_username, line);
