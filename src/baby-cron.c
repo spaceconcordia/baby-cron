@@ -12,6 +12,7 @@
 #include "shakespeare.h"
 #include <UpdaterClient.h>
 
+#define PROCESS "Baby-Cron"
 
 unsigned long g_rtries = 1;
 
@@ -83,12 +84,12 @@ void flag_starting_jobs(time_t t1, time_t t2)
 					if (DebugOpt) {
                         char msg[LOG_BUFFER_SIZE];
                         sprintf(msg, "job: %d %s", (int)line->cl_pid, line->cl_cmd);
-                        Shakespeare::log(g_fp_log, Shakespeare::DEBUG, "Baby-Cron", string(msg));
+                        Shakespeare::log(g_fp_log, Shakespeare::DEBUG, PROCESS, string(msg));
 					}
 					if (line->cl_pid > 0) {
                         char msg[LOG_BUFFER_SIZE];
                         sprintf(msg, "user %s: process already running: %s", file->cf_username, line->cl_cmd);
-                        Shakespeare::log(g_fp_log, Shakespeare::WARNING, "Baby-Cron", string(msg));
+                        Shakespeare::log(g_fp_log, Shakespeare::WARNING, PROCESS, string(msg));
 					} else if (line->cl_pid == 0) {
 						line->cl_pid = -1;
 						file->cf_wants_starting = 1;
@@ -128,7 +129,7 @@ void start_one_job(const char *user, CronLine *line)
 	if (!pas) {
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "can't get uid for %s", user);
-        Shakespeare::log(g_fp_log, Shakespeare::WARNING, "Baby-Cron", string(msg));
+        Shakespeare::log(g_fp_log, Shakespeare::WARNING, PROCESS, string(msg));
 		goto err;
 	}
 
@@ -148,23 +149,21 @@ void start_one_job(const char *user, CronLine *line)
 		/* crond 3.0pl1-100 puts tasks in separate process groups */
 //		bb_setpgrp();
 
-
-        Shakespeare::log(g_fp_log, Shakespeare::NOTICE,"About to execute "+ line->cl_cmd);
-        fflush(stdout);
+        Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, "About to execute " + string(line->cl_cmd));
 		//execl(DEFAULT_SHELL, DEFAULT_SHELL, "-c", line->cl_cmd, (char *) NULL);
 		execl(line->cl_cmd, (char *) NULL);
 
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "can't execute '%s' for user %s", DEFAULT_SHELL, user);
-        Shakespeare::log(g_fp_log, Shakespeare::ERROR, "Baby-Cron", string(msg));
+        Shakespeare::log(g_fp_log, Shakespeare::ERROR, PROCESS, string(msg));
 
         _exit(EXIT_SUCCESS);
 	} else if (pid > 0) {
         int status;
 		int r = waitpid(line->cl_pid, &status, WNOHANG); // prevent zombies
         if (r == pid) {
-                printf("zombie r destroyed = %d\n", r);
-                fflush(stdout);
+                Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, "zombie r destroyed = "+r);
+
                 if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
                     process_finished_job(user, line);
 
@@ -176,7 +175,7 @@ void start_one_job(const char *user, CronLine *line)
 		/* FORK FAILED */
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "can't vfork");
-        Shakespeare::log(g_fp_log, Shakespeare::ERROR, "Baby-Cron", string(msg));
+        Shakespeare::log(g_fp_log, Shakespeare::ERROR, PROCESS, string(msg));
  err:
 		pid = 0;
 	}
@@ -203,24 +202,28 @@ void start_jobs(void)
                 line->cl_pid = 0;
                 continue;
             }
+            char failuremsg[LOG_BUFFER_SIZE];
+            sprintf(failuremsg,"%s "," pid=");
+            sprintf(failuremsg,"%ld ",(long)line->cl_pid);
+            sprintf(failuremsg,"%s "," failures=");
+            sprintf(failuremsg,"%d ",line->cl_failures);
+            sprintf(failuremsg,"%s "," cmd=");
+            sprintf(failuremsg,"%s ",line->cl_cmd);
 
-            //Shakespeare::log(g_fp_log, Shakespeare::NOTICE, "Baby-Cron", "pid=" + (string)line->cl_pid + ", failures =" + (string)line->cl_failures + ", cmd="+(string)line->cl_cmd);
-            //printf("pid = %3d\n", line->cl_pid);
-            //printf("failures = %d\n", line->cl_failures);
-            //printf("cmd = %s\n", line->cl_cmd);
-            fflush(stdout);
-
-			start_one_job(file->cf_username, line);
+            Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, failuremsg);
+			
+            start_one_job(file->cf_username, line);
 			pid = line->cl_pid;
 
-            printf("pid returned = %3d\n", pid);
-            fflush(stdout);
-
+            char pidreturned[LOG_BUFFER_SIZE];
+            sprintf(pidreturned,"%s","pid returned = ");
+            sprintf(pidreturned,"%3d\n", pid);
+            Shakespeare::log(g_fp_log, Shakespeare::WARNING, PROCESS, pidreturned);
             line->cl_time_started = time(NULL);
 
             char msg[LOG_BUFFER_SIZE];
             sprintf(msg, "USER %s pid %3d cmd %s", file->cf_username, (int)pid, line->cl_cmd);
-            Shakespeare::log(g_fp_log, Shakespeare::WARNING, "Baby-Cron", string(msg));
+            Shakespeare::log(g_fp_log, Shakespeare::WARNING, PROCESS, string(msg));
 
 			if (pid < 0) {
 				file->cf_wants_starting = 1;
@@ -231,9 +234,6 @@ void start_jobs(void)
 		}
 	}
 }
-
-
-
 
 void update_failures_state(CronFile *file, CronLine *line) {
     line->cl_failures += 1;
@@ -256,8 +256,7 @@ void update_failures_state(CronFile *file, CronLine *line) {
         char* lastSlash = strrchr(path, '/');
         *lastSlash  = '\0';
 
-        printf("[DEBUG] path to rollback : %s\n", path);
-        fflush(stdout);
+        Shakespeare::log(g_fp_log, Shakespeare::DEBUG, PROCESS, "path to rollback : " + string(path));
 
 	    chdir("/home/apps/current/space-updater-api");          // Because sockets are created in the current directory.
 
@@ -306,12 +305,17 @@ int check_completions(void)
             //waitpid returned an error or detected a state change in the pid
 			if (r < 0 || r == line->cl_pid) {
                 // exit(0) detected
-                printf("r = %d, pid = %d status = %d\n", r, line->cl_pid, status);
-                fflush(stdout);
+                char statusmsg[LOG_BUFFER_SIZE];
+                sprintf(statusmsg,"%s ","r=");
+                sprintf(statusmsg,"%d ",r);
+                sprintf(statusmsg,"%s "," pid=");
+                sprintf(statusmsg,"%ld ",(long)line->cl_pid);
+                sprintf(statusmsg,"%s "," status=");
+                sprintf(statusmsg,"%d ",status);
+                Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, statusmsg);
 
                 if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-                    printf("exited with status");
-                    fflush(stdout);
+                    Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, "exited with status");
                     process_finished_job(file->cf_username, line);
 
                    if (line->cl_pid == 0) { continue; }
@@ -328,12 +332,11 @@ int check_completions(void)
                // int resultkill = 0;
                 char msg[LOG_BUFFER_SIZE];
                 sprintf(msg, "kill %d", line->cl_pid);
-                printf(msg);
-                fflush(stdout);
+                Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, msg);
                 //execl(msg, (char*)NULL);
 
                 sprintf(msg, "failed %3d %3d %d", line->cl_pid, line->cl_failures, resultkill);
-                Shakespeare::log(g_fp_log, Shakespeare::ERROR, "Baby-Cron", string(msg));
+                Shakespeare::log(g_fp_log, Shakespeare::ERROR, PROCESS, string(msg));
                 update_failures_state(file, line);
                 continue;
             }
