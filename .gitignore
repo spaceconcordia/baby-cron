@@ -5,3 +5,5 @@ bin/
 tests/jobs/hang
 tests/jobs/success
 tests/jobs/fail
+*.a
+*.o
