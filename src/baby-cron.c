@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include "shakespeare.h"
+#include "SpaceDecl.h"
 #include <UpdaterClient.h>
 
 #define PROCESS "Baby-Cron"
