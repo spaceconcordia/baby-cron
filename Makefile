@@ -7,7 +7,7 @@ DEBUGFLAGS=-ggdb -g -gdwarf-2 -g3 #gdwarf-2 + g3 provides macro info to gdb
 UPDATER_API_PATH = ../space-updater-api
 INCPATH=-I./include/ -I../space-lib/include/ -I$(UPDATER_API_PATH)/include
 INCTESTPATH=-I./tests/unit/stubs/ -I./tests/helpers/include/
-LIBPATH=-L./lib/ -L../space-lib/shakespeare/lib
+LIBPATH=-L./lib/ -L../space-lib/lib/
 LIBS=-lCppUTest -lCppUTestExt -lshakespeare
 #The test builds have their own main provided by CppUTest so we need to exclude baby-cron-main.c
 DEBUG_SRC_FILES =`find src/ ! -name 'baby-cron-main.c' -name '*.c'`
