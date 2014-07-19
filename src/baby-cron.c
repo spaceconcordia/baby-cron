@@ -1,3 +1,4 @@
+#define G_FP_LOG  
 /*
  * Modified version of crond from  http://www.busybox.net/
  *

@@ -1,15 +1,17 @@
-#include "CppUTest/TestHarness.h"
 #include <cstdlib>
 #include <string.h>
-#include "baby-cron.h"
 
+#include "CppUTest/TestHarness.h"
+
+#include "baby-cron.h"
 #include "tests-globals.h"
 #include "tests-helpers.h"
 
 static const int BUFFER_SIZE = 10;
 static char g_zeroOutBuffer[BUFFER_SIZE];
 
-TEST_GROUP(BabyCron) {
+TEST_GROUP(BabyCron) 
+{
     void setup() {
         memset(g_zeroOutBuffer, 0, sizeof(char) * BUFFER_SIZE);
     }

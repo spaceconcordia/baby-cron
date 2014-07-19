@@ -1,11 +1,12 @@
-#include "CppUTest/TestHarness.h"
-#include "crontab.h"
-#include "config.h"
-#include "config-stub.h"
 #include <string.h>
 #include <algorithm>
 #include <sys/stat.h>
 
+#include "CppUTest/TestHarness.h"
+
+#include "crontab.h"
+#include "config.h"
+#include "config-stub.h"
 #include "tests-helpers.h"
 #include "tests-globals.h"
 

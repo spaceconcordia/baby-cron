@@ -1,4 +1,3 @@
-#define MAIN
 #include <baby-cron.h>
 #include <crontab.h>
 #include <string>

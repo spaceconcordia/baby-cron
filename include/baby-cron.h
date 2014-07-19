@@ -50,7 +50,7 @@ enum {
 #endif
 
 #define LOG_BUFFER_SIZE 100
-#ifdef MAIN
+#ifdef G_FP_LOG
 FILE* g_fp_log;
 #else
 extern FILE* g_fp_log;
