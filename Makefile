@@ -29,7 +29,7 @@ INCTESTPATH = -I./tests/unit/stubs/ -I./tests/helpers/include/
 # Libraries
 #
 LIBPATH = -L./lib  -L$(SPACE_LIB)/shakespeare/lib -L$(CPPUTEST_HOME)/lib -L$(SPACE_UTLS)/lib
-LIBS = -lshakespeare -lcs1_utls.a
+LIBS = -lshakespeare -lcs1_utls
 CPPUTEST_LIBS=-lCppUTest -lCppUTestExt 
 
 #The test builds have their own main provided by CppUTest so we need to exclude baby-cron-main.c
