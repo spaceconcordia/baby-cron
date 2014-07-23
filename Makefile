@@ -29,7 +29,7 @@ INCTESTPATH = -I./tests/unit/stubs/ -I./tests/helpers/include/
 # Libraries
 #
 LIBPATH = -L./lib  -L$(SPACE_LIB)/shakespeare/lib -L$(CPPUTEST_HOME)/lib -L$(SPACE_UTLS)/lib
-LIBS = -lshakespeare
+LIBS = -lshakespeare -lcs1_utls.a
 CPPUTEST_LIBS=-lCppUTest -lCppUTestExt 
 
 #The test builds have their own main provided by CppUTest so we need to exclude baby-cron-main.c
@@ -63,7 +63,7 @@ bin/crontab.o: src/crontab.c
 
 
 buildQ6: make_dir $(OBJECTS_Q6)
-	$(MBCC) $(MICROCFLAGS) $(INCLUDES) $(LIBPATH) src/*.c $(OBJECTS_Q6) -o bin/baby-cron -lshakespeare-mbcc
+	$(MBCC) $(MICROCFLAGS) $(INCLUDES) $(LIBPATH) src/*.c $(OBJECTS_Q6) -o bin/baby-cron -lshakespeare-mbcc -lcs1_utlsQ6
 
 bin/UpdaterClient.o : $(UPDATER_API_PATH)/src/UpdaterClient.cpp $(UPDATER_API_PATH)/include/UpdaterClient.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(LIBPATH) $(INCLUDES) -c $< -o $@ $(ENV)
