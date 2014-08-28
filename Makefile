@@ -39,8 +39,12 @@ Q6_TAG=Q6
 OBJECTS= bin/UpdaterClient.o bin/baby-cron.o bin/config.o bin/crontab.o
 OBJECTS_Q6= bin/UpdaterClient$(Q6_TAG).o
 
+#
+# N.B. CppUTest will report 'Deallocating non-allocated memory' when a function like
+#      getline() allocate memory that is supposed to be freed in the user program.
+#
 UTEST=$(MEM_LEAK_MACRO) $(CPPUTEST_LIBS) 
-ENV= $(UTEST)  -DCS1_DEBUG
+ENV= -DCS1_DEBUG 
 
 make_dir:
 	mkdir -p bin lib
