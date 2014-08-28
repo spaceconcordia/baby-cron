@@ -330,7 +330,6 @@ void rescan_crontab_dir(void)
 		DIR *dir = opendir(".");
 		struct dirent *den;
 
-
         if (!dir){
             char msg[LOG_BUFFER_SIZE];
             sprintf(msg, "chdir(%s)", ".");
@@ -342,8 +341,14 @@ void rescan_crontab_dir(void)
 			if (strchr(den->d_name, '.') != NULL) {
 				continue;
 			}
+
 			load_crontab(den->d_name);
+
+            #ifdef CS1_DEBUG
+                printf("[baby-cron] crontab loaded : %s\n", den->d_name);fflush(stdout);
+            #endif
 		}
+
 		closedir(dir);
 	}
 }

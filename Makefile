@@ -40,7 +40,7 @@ OBJECTS= bin/UpdaterClient.o bin/baby-cron.o bin/config.o bin/crontab.o
 OBJECTS_Q6= bin/UpdaterClient$(Q6_TAG).o
 
 UTEST=$(MEM_LEAK_MACRO) $(CPPUTEST_LIBS) 
-ENV= $(UTEST)
+ENV= $(UTEST)  -DCS1_DEBUG
 
 make_dir:
 	mkdir -p bin lib
