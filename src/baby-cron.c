@@ -190,20 +190,23 @@ void start_jobs(void)
 	CronLine *line;
 
 	for (file = G.cron_files; file; file = file->cf_next) {
-		if (!file->cf_wants_starting)
+		if (!file->cf_wants_starting) {
 			continue;
+        }
 
 		file->cf_wants_starting = 0;
 		for (line = file->cf_lines; line; line = line->cl_next) {
 			pid_t pid;
-		if (line->cl_pid >= 0)
+
+		    if (line->cl_pid >= 0)
 				continue;
 
-            	        if (line->cl_failures > MAX_FAILURES) {
+            if (line->cl_failures > MAX_FAILURES) {
                 //TODO: Remove magic number
                 line->cl_pid = 0;
                 continue;
             }
+
             char failuremsg[LOG_BUFFER_SIZE];
             sprintf(failuremsg,"%s "," pid=");
             sprintf(failuremsg,"%ld ",(long)line->cl_pid);
@@ -211,7 +214,6 @@ void start_jobs(void)
             sprintf(failuremsg,"%d ",line->cl_failures);
             sprintf(failuremsg,"%s "," cmd=");
             sprintf(failuremsg,"%s ",line->cl_cmd);
-
             Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, failuremsg);
 			
             start_one_job(file->cf_username, line);

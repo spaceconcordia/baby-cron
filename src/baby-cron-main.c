@@ -52,6 +52,10 @@ int main(void) {
 	// /* Main loop */
 	t2 = time(NULL);
 	for (;;) {
+        #ifdef CS1_DEBUG
+            printf(".");fflush(stdout);
+        #endif
+
 	 	time_t t1;
 	 	long dt;
 
