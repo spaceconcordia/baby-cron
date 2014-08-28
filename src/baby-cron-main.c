@@ -5,8 +5,10 @@
 #include <unistd.h>
 #include <time.h>
 #include "shakespeare.h"
-#include <UpdaterClient.h>
-using namespace std;
+#include "SpaceDecl.h"
+#include "UpdaterClient.h"
+
+using namespace std;        // Yes, we are compiling C code with a C++ compiler...
 const int SLEEP_TIME = 15;
 
 pid_t get_watch_puppy_pid() {
@@ -33,7 +35,7 @@ void signal_watch_puppy() {
 }
 
 int main(void) {
-    string folder   = "/home/logs/";
+    string folder = CS1_LOGS;
     g_fp_log = Shakespeare::open_log(folder, "Baby-Cron");
     Shakespeare::log(g_fp_log, Shakespeare::NOTICE, "Baby-Cron", "Starting");
     fflush(g_fp_log);
