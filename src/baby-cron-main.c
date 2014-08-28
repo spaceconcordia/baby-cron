@@ -41,7 +41,6 @@ int main(void) {
     fflush(g_fp_log);
 
 	time_t t2;
-
 	INIT_G();
 
 	//xchdir(G.crontab_dir_name);
@@ -50,9 +49,9 @@ int main(void) {
 	// crondlog(LVL8 "crond (busybox "BB_VER") started, log level %d", G.log_level);
 	rescan_crontab_dir();
 	// write_pidfile("/var/run/crond.pid");
-
-	// /* Main loop */
 	t2 = time(NULL);
+
+	/* Main loop */
 	for (;;) {
         #ifdef CS1_DEBUG
             printf(".");fflush(stdout);
@@ -66,7 +65,7 @@ int main(void) {
         signal_watch_puppy();
 
 	 	/* Synchronize to 1 minute, minimum 1 second */
-//	 	sleep(sleep_time - (time(NULL) % sleep_time) + 1);
+	 	// sleep(sleep_time - (time(NULL) % sleep_time) + 1);
         sleep(SLEEP_TIME);
 
 	 	t2 = time(NULL);
