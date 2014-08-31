@@ -1,3 +1,5 @@
+#include "file-stub.h"
+
 int filenoStub(FILE* f) {
    return 0; 
 }

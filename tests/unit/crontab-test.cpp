@@ -3,6 +3,7 @@
 #include <sys/stat.h>
 
 #include "CppUTest/TestHarness.h"
+#include "CppUTest/MemoryLeakDetectorMallocMacros.h"
 
 #include "crontab.h"
 #include "config.h"
@@ -30,6 +31,7 @@ TEST(CronTab, ParseField_SingleDigit_BufferHasOneElementSet) {
     CHECK(std::equal(actual, actual + BUFFER_SIZE, expected));
 }
 
+//*
 TEST(CronTab, ParseField_Hyphen_BufferHasRangeElementsSet) {
     char* actual               = zeroOutBuffer; 
     char expected[BUFFER_SIZE] = {0, 1, 1, 1, 1, 1, 0, 0, 0, 0};
@@ -82,7 +84,7 @@ TEST(CronTab, ParseField_InvalidToken_BufferIsNotChanged) {
 
 
 TEST(CronTab, LoadCronTab_ValidFile_ReturnCronTabStruct) {
-    /* Init memory for dependency injector */
+    // Init memory for dependency injector 
     char *line = (char*)malloc(sizeof(char) * 18);
     strcpy(line, "1 1 1 1 1 command");
 
@@ -102,10 +104,10 @@ TEST(CronTab, LoadCronTab_ValidFile_ReturnCronTabStruct) {
     strcpy(tokens[4], "1");
     strcpy(tokens[5], "command");
 
-    /* Inject DI */
+    // Inject DI 
     set_config(tokens, line); //No need to free, done internally by config_read
 
-    /* Define expected variables */
+    // Define expected variables 
     char expectedDow[DOW]   = {0};
     char expectedMons[MONS] = {0};
     char expectedHrs[HRS]   = {0};
@@ -118,7 +120,7 @@ TEST(CronTab, LoadCronTab_ValidFile_ReturnCronTabStruct) {
     clearAndSet(expectedDays, DAYS, 1, 1);
     clearAndSet(expectedMins, MINS, 1, 1);
 
-    /* Start test */
+    // Start test 
     load_crontab("root");
     CronLine* actual = G.cron_files->cf_lines;
 
@@ -134,4 +136,4 @@ TEST(CronTab, LoadCronTab_ValidFile_ReturnCronTabStruct) {
     }
     free(tokens);
 }
-
+//*/

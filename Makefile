@@ -3,36 +3,42 @@ MBCC=microblazeel-xilinx-linux-gnu-g++
 BB=arm-linux-gnueabi-g++
 
 #
+#++++++++++++++++++++
 # Paths
-#
+#--------------------
 CPPUTEST_HOME = ../CppUTest
 SPACE_LIB = ../space-lib
 SPACE_UTLS = $(SPACE_LIB)/utls
 UPDATER_API_PATH = ../space-updater-api
 
 #
+#++++++++++++++++++++
 # Flags
-#
-CFLAGS=-Wall
-CPPFLAGS += -Wall -I$(CPPUTEST_HOME)/include
+#--------------------
+CFLAGS=
+CPPFLAGS += -Wall -I../CppUTest/include
 MEM_LEAK_MACRO = -include $(CPPUTEST_HOME)/include/CppUTest/MemoryLeakDetectorMallocMacros.h  -include $(CPPUTEST_HOME)/include/CppUTest/MemoryLeakDetectorNewMacros.h
 MICROCFLAGS=-mcpu=v8.40.b -mxl-barrel-shift -mxl-multiply-high -mxl-pattern-compare -mno-xl-soft-mul -mno-xl-soft-div -mxl-float-sqrt -mhard-float -mxl-float-convert -mlittle-endian -Wall
 DEBUGFLAGS=-ggdb -g -gdwarf-2 -g3 #gdwarf-2 + g3 provides macro info to gdb
 
 #
+#++++++++++++++++++++
 # includes
-#
-INCLUDES = -I./include/ -I$(SPACE_LIB)/include/ -I$(UPDATER_API_PATH)/include -I$(CPPUTEST_HOME)/include
-INCTESTPATH = -I./tests/unit/stubs/ -I./tests/helpers/include/
+#--------------------
+INCLUDES = -I./include -I$(SPACE_LIB)/include -I$(UPDATER_API_PATH)/include -I$(CPPUTEST_HOME)/include
+INCLUDE_STUBS = -I./tests/unit/stubs -I./tests/helpers/include
 
 #
+#++++++++++++++++++++
 # Libraries
-#
+#--------------------
 LIBPATH = -L./lib  -L$(SPACE_LIB)/shakespeare/lib -L$(CPPUTEST_HOME)/lib -L$(SPACE_UTLS)/lib
 LIBS = -lshakespeare -lcs1_utls
 CPPUTEST_LIBS=-lCppUTest -lCppUTestExt 
 
-#The test builds have their own main provided by CppUTest so we need to exclude baby-cron-main.c
+#
+# The test builds have their own main provided by CppUTest so we need to exclude baby-cron-main.c
+#
 DEBUG_SRC_FILES =`find src/ ! -name 'baby-cron-main.c' -name '*.c'`
 
 Q6_TAG=Q6
@@ -46,8 +52,12 @@ OBJECTS_Q6= bin/UpdaterClient$(Q6_TAG).o
 UTEST=$(MEM_LEAK_MACRO) $(CPPUTEST_LIBS) 
 ENV= -DCS1_DEBUG 
 
+#
+#++++++++++++++++++++
+#  x86 
+#--------------------
 make_dir:
-	mkdir -p bin lib
+	mkdir -p bin
 
 buildBin: make_dir bin/baby-cron
 
@@ -63,14 +73,18 @@ bin/config.o: src/config.c
 bin/crontab.o: src/crontab.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $(LIBPATH)  -o $@ -c $^ $(LIBS) $(ENV)
 
+bin/UpdaterClient.o : $(UPDATER_API_PATH)/src/UpdaterClient.cpp $(UPDATER_API_PATH)/include/UpdaterClient.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(LIBPATH) $(INCLUDES) -c $< -o $@ $(ENV)
 
 
+
+#
+#++++++++++++++++++++
+#   Q6
+#--------------------
 
 buildQ6: make_dir $(OBJECTS_Q6)
 	$(MBCC) $(MICROCFLAGS) $(INCLUDES) $(LIBPATH) src/*.c $(OBJECTS_Q6) -o bin/baby-cron -lshakespeare-mbcc -lcs1_utlsQ6
-
-bin/UpdaterClient.o : $(UPDATER_API_PATH)/src/UpdaterClient.cpp $(UPDATER_API_PATH)/include/UpdaterClient.h
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(LIBPATH) $(INCLUDES) -c $< -o $@ $(ENV)
 
 bin/UpdaterClientQ6.o : $(UPDATER_API_PATH)/src/UpdaterClient.cpp $(UPDATER_API_PATH)/include/UpdaterClient.h
 	$(MBCC) $(CFLAGS) $(DEBUGFLAGS) $(LIBPATH)  $(INCLUDES) -c $< -o $@ $(ENV)
@@ -79,11 +93,68 @@ bin/UpdaterClientQ6.o : $(UPDATER_API_PATH)/src/UpdaterClient.cpp $(UPDATER_API_
 # clean
 #------------------
 clean:
-	rm -rf ./bin ./lib
-
+	rm -rf ./bin/* 
 
 
 #
+#++++++++++++++++++
+# UTest 
+#------------------
+UTEST_INCLUDES= -include ./tests/unit/stubs/file-stub.h -include ./tests/unit/stubs/time-stub.h
+UNIT_TEST= tests/unit/crontab-test.cpp # tests/unit/baby-cron-test.cpp 
+
+#
+# Utest are failing....... TODO
+#
+test : make_dir bin/AllTests
+##buildIntegrationTests
+
+
+UTEST_OBJECTS= bin/baby-cronUTEST.o bin/crontabUTEST.o bin/UpdaterClient.o bin/config-stub.o bin/file-stub.o bin/time-stub.o bin/tests-helpers.o
+
+
+bin/baby-cronUTEST.o: src/baby-cron.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $(UTEST_INCLUDES) $(LIBPATH)  -o $@ -c $^ $(LIBS) $(CPPUTEST_LIBS) $(ENV)
+
+bin/configUTEST.o: src/config.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $(UTEST_INCLUDES) $(LIBPATH)  -o $@ -c $^ $(LIBS) $(CPPUTEST_LIBS) $(ENV)
+
+bin/crontabUTEST.o: src/crontab.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $(UTEST_INCLUDES) $(LIBPATH)  -o $@ -c $^ $(LIBS) $(CPPUTEST_LIBS) $(ENV)
+
+#
+# tests/unit/stubs
+#
+bin/config-stub.o : tests/unit/stubs/config-stub.cpp
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCLUDE_STUBS) $(LIBPATH) -o $@ -c $^ $(LIBS) $(CPPUTEST_LIBS) $(ENV)
+
+bin/file-stub.o : tests/unit/stubs/file-stub.cpp
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCLUDE_STUBS) $(LIBPATH) -o $@ -c $^ $(LIBS) $(CPPUTEST_LIBS) $(ENV)
+
+bin/time-stub.o : tests/unit/stubs/time-stub.cpp
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCLUDE_STUBS) $(LIBPATH)   -o $@ -c $^ $(LIBS) $(CPPUTEST_LIBS) $(ENV)
+
+#
+# tests/helpers
+#
+bin/tests-helpers.o : tests/helpers/src/tests-helpers.cpp
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCLUDE_STUBS) $(LIBPATH)   -o $@ -c $^ $(LIBS) $(CPPUTEST_LIBS) $(ENV)
+
+
+#
+# AllTests
+#
+bin/AllTests: tests/unit/AllTests.cpp  $(UNIT_TEST) $(UTEST_OBJECTS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCLUDE_STUBS) $(LIBPATH)  -o $@  $^ $(LIBS)  $(ENV) $(CPPUTEST_LIBS) 
+
+
+#
+#
+#
+#
+#
+#
+# <=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-===--- * * * * 
 # CLEAN UP needed
 #
 buildBB: make_dir
@@ -91,28 +162,10 @@ buildBB: make_dir
 
 
 
-#
-# Utest are failing....... TODO
-#
-buildAllTests: make_dir bin/AllUnitTests 
-##buildIntegrationTests
-
-#++++++++++++++++++
-# UTest 
-#------------------
-UTEST_INCLUDES= -include ./tests/unit/stubs/file-stub.h -include ./tests/unit/stubs/time-stub.h
-UNIT_TEST= tests/unit/baby-cron-test.cpp tests/unit/crontab-test.cpp
-
-# Do not include the config.c in the unit tests otherwise it causes multiple defines errors
-bin/AllUnitTests: tests/unit/AllTests.cpp  $(UNIT_TEST) bin/crontab.o bin/baby-cron.o bin/UpdaterClient.o 
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCTESTPATH) $(LIBPATH) $(UTEST_INCLUDES) -o $@ tests/unit/stubs/*.cpp  tests/helpers/src/*.cpp  $^  $(LIBS) $(ENV)
-
-
-
 
 
 buildIntegrationTests: $(OBJECTS) 
-	$(CC) $(CFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCTESTPATH) $(LIBPATH) $(DEBUG_SRC_FILES) tests/integration/*.cpp tests/helpers/src/*.cpp -o bin/AllIntegrationTests $(LIBS)
+	$(CC) $(CFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCLUDE_STUBS) $(LIBPATH) $(DEBUG_SRC_FILES) tests/integration/*.cpp tests/helpers/src/*.cpp -o bin/AllIntegrationTests $(LIBS)
 
 
 
