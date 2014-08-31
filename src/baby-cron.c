@@ -153,7 +153,7 @@ void start_one_job(const char *user, CronLine *line)
 
         Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, "About to execute " + string(line->cl_cmd));
 		//execl(DEFAULT_SHELL, DEFAULT_SHELL, "-c", line->cl_cmd, (char *) NULL);
-		execl(line->cl_cmd, (char *) NULL);
+		execl(line->cl_cmd, line->cl_cmd, (char *) NULL);
 
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "can't execute '%s' for user %s", DEFAULT_SHELL, user);
