@@ -4,14 +4,17 @@
 #include <cstring>
 #include <unistd.h>
 #include <time.h>
+
 #include "shakespeare.h"
-#include <UpdaterClient.h>
-using namespace std;
+#include "SpaceDecl.h"
+#include "UpdaterClient.h"
+
+using namespace std; // Yes, we are compiling a C file with g++
 const int SLEEP_TIME = 15;
 
 pid_t get_watch_puppy_pid() {
     const int BUFFER_SIZE = 10;
-    string filename = "/home/pids/watch-puppy.pid";
+    string filename = CS1_WATCH_PUPPY_PID; 
     char buffer[BUFFER_SIZE] = {0};
     FILE* fp = fopen(filename.c_str(), "r");
 
