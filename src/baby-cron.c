@@ -61,7 +61,8 @@ void flag_starting_jobs(time_t t1, time_t t2)
 
 	/* Find jobs > t1 and <= t2 */
 
-	for (t = t1 - t1 % 60; t <= t2; t += 60) {
+	for (t = t1 - t1 % 60; t <= t2; t += 60) 
+    {
 		struct tm *ptm;
 		CronFile *file;
 		CronLine *line;
@@ -70,24 +71,23 @@ void flag_starting_jobs(time_t t1, time_t t2)
 			continue;
 
 		ptm = localtime(&t);
-		for (file = G.cron_files; file; file = file->cf_next) {
-			//if (DebugOpt)
-				///crondlog(LVL5 "file %s:", file->cf_username);
+		for (file = G.cron_files; file; file = file->cf_next) 
+        {
 			if (file->cf_deleted)
 				continue;
-			for (line = file->cf_lines; line; line = line->cl_next) {
-//				if (DebugOpt)
-//					crondlog(LVL5 " line %s", line->cl_cmd);
+			for (line = file->cf_lines; line; line = line->cl_next) 
+            {
 				if (line->cl_Mins[ptm->tm_min]
-				 && line->cl_Hrs[ptm->tm_hour]
-				 && (line->cl_Days[ptm->tm_mday] || line->cl_Dow[ptm->tm_wday])
-				 && line->cl_Mons[ptm->tm_mon]
-				) {
+                        && line->cl_Hrs[ptm->tm_hour]
+                            && (line->cl_Days[ptm->tm_mday] || line->cl_Dow[ptm->tm_wday])
+                                && line->cl_Mons[ptm->tm_mon]) 
+                {
 					if (DebugOpt) {
                         char msg[LOG_BUFFER_SIZE];
                         sprintf(msg, "job: %d %s", (int)line->cl_pid, line->cl_cmd);
                         Shakespeare::log(g_fp_log, Shakespeare::DEBUG, PROCESS, string(msg));
 					}
+
 					if (line->cl_pid > 0) {
                         char msg[LOG_BUFFER_SIZE];
                         sprintf(msg, "user %s: process already running: %s", file->cf_username, line->cl_cmd);
@@ -97,9 +97,9 @@ void flag_starting_jobs(time_t t1, time_t t2)
 						file->cf_wants_starting = 1;
 				    }
 				}
-			}
-		}
-	}
+			} // 2nd inner loop
+		} // 1st inner loop
+	} // outer loop
 }
 
 static void process_finished_job(const char *user, CronLine *line)
@@ -190,20 +190,23 @@ void start_jobs(void)
 	CronLine *line;
 
 	for (file = G.cron_files; file; file = file->cf_next) {
-		if (!file->cf_wants_starting)
+		if (!file->cf_wants_starting) {
 			continue;
+        }
 
 		file->cf_wants_starting = 0;
 		for (line = file->cf_lines; line; line = line->cl_next) {
 			pid_t pid;
-		if (line->cl_pid >= 0)
+
+		    if (line->cl_pid >= 0)
 				continue;
 
-            	        if (line->cl_failures > MAX_FAILURES) {
+            if (line->cl_failures > MAX_FAILURES) {
                 //TODO: Remove magic number
                 line->cl_pid = 0;
                 continue;
             }
+
             char failuremsg[LOG_BUFFER_SIZE];
             sprintf(failuremsg,"%s "," pid=");
             sprintf(failuremsg,"%ld ",(long)line->cl_pid);
@@ -211,7 +214,6 @@ void start_jobs(void)
             sprintf(failuremsg,"%d ",line->cl_failures);
             sprintf(failuremsg,"%s "," cmd=");
             sprintf(failuremsg,"%s ",line->cl_cmd);
-
             Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, failuremsg);
 			
             start_one_job(file->cf_username, line);

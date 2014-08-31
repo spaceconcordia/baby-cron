@@ -237,8 +237,9 @@ void load_crontab(const char *fileName)
 #endif
 
 	parser = config_open(fileName);
-	if (!parser)
+	if (!parser) {
 		return;
+    }
 
     maxLines = (strcmp(fileName, "root") == 0) ? 65535 : MAXLINES;
 
@@ -296,9 +297,11 @@ void load_crontab(const char *fileName)
 			/* copy command */
 			line->cl_cmd = xstrdup(tokens[5]);
             line->cl_failures = 0;
-			/*if (DebugOpt) {
-				crondlog(LVL5 " command:%s", tokens[5]);
-			}*/
+
+            #ifdef CS1_DEBUG
+                printf("cmd : %s\n", line->cl_cmd); fflush(stdout);
+            #endif
+
 			pline = &line->cl_next;
 //bb_error_msg("M[%s]F[%s][%s][%s][%s][%s][%s]", mailTo, tokens[0], tokens[1], tokens[2], tokens[3], tokens[4], tokens[5]);
 		}
@@ -330,7 +333,6 @@ void rescan_crontab_dir(void)
 		DIR *dir = opendir(".");
 		struct dirent *den;
 
-
         if (!dir){
             char msg[LOG_BUFFER_SIZE];
             sprintf(msg, "chdir(%s)", ".");
@@ -342,8 +344,14 @@ void rescan_crontab_dir(void)
 			if (strchr(den->d_name, '.') != NULL) {
 				continue;
 			}
+
 			load_crontab(den->d_name);
+
+            #ifdef CS1_DEBUG
+                printf("[baby-cron] crontab loaded : %s\n", den->d_name);fflush(stdout);
+            #endif
 		}
+
 		closedir(dir);
 	}
 }
