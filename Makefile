@@ -17,22 +17,26 @@ UPDATER_API_PATH = ../space-updater-api
 #--------------------
 CFLAGS=
 CPPFLAGS += -Wall -I../CppUTest/include
-MEM_LEAK_MACRO = -include $(CPPUTEST_HOME)/include/CppUTest/MemoryLeakDetectorMallocMacros.h  -include $(CPPUTEST_HOME)/include/CppUTest/MemoryLeakDetectorNewMacros.h
-MICROCFLAGS=-mcpu=v8.40.b -mxl-barrel-shift -mxl-multiply-high -mxl-pattern-compare -mno-xl-soft-mul -mno-xl-soft-div -mxl-float-sqrt -mhard-float -mxl-float-convert -mlittle-endian -Wall
+MEM_LEAK_MACRO = -include $(CPPUTEST_HOME)/include/CppUTest/MemoryLeakDetectorMallocMacros.h \
+                    -include $(CPPUTEST_HOME)/include/CppUTest/MemoryLeakDetectorNewMacros.h
+MICROCFLAGS=-mcpu=v8.40.b -mxl-barrel-shift -mxl-multiply-high -mxl-pattern-compare -mno-xl-soft-mul \
+              -mno-xl-soft-div -mxl-float-sqrt -mhard-float -mxl-float-convert -mlittle-endian -Wall
 DEBUGFLAGS=-ggdb -g -gdwarf-2 -g3 #gdwarf-2 + g3 provides macro info to gdb
 
 #
 #++++++++++++++++++++
 # includes
 #--------------------
-INCLUDES = -I./include -I$(SPACE_LIB)/include -I$(UPDATER_API_PATH)/include -I$(CPPUTEST_HOME)/include
+INCLUDES = -I./include -I$(SPACE_LIB)/include -I$(UPDATER_API_PATH)/include \
+                                              -I$(CPPUTEST_HOME)/include
 INCLUDE_STUBS = -I./tests/unit/stubs -I./tests/helpers/include
 
 #
 #++++++++++++++++++++
 # Libraries
 #--------------------
-LIBPATH = -L./lib  -L$(SPACE_LIB)/shakespeare/lib -L$(CPPUTEST_HOME)/lib -L$(SPACE_UTLS)/lib
+LIBPATH = -L./lib  -L$(SPACE_LIB)/shakespeare/lib -L$(CPPUTEST_HOME)/lib \
+                                                        -L$(SPACE_UTLS)/lib
 LIBS = -lshakespeare -lcs1_utls
 CPPUTEST_LIBS=-lCppUTest -lCppUTestExt 
 
@@ -49,7 +53,7 @@ OBJECTS_Q6= bin/UpdaterClient$(Q6_TAG).o
 # N.B. CppUTest will report 'Deallocating non-allocated memory' when a function like
 #      getline() allocate memory that is supposed to be freed in the user program.
 #
-UTEST=$(MEM_LEAK_MACRO) $(CPPUTEST_LIBS) 
+UTEST_ENV=-DCS1_UTEST $(MEM_LEAK_MACRO) $(CPPUTEST_LIBS) 
 ENV= -DCS1_DEBUG 
 
 #
@@ -73,15 +77,16 @@ bin/config.o: src/config.c
 bin/crontab.o: src/crontab.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $(LIBPATH)  -o $@ -c $^ $(LIBS) $(ENV)
 
-bin/UpdaterClient.o : $(UPDATER_API_PATH)/src/UpdaterClient.cpp $(UPDATER_API_PATH)/include/UpdaterClient.h
+bin/UpdaterClient.o : $(UPDATER_API_PATH)/src/UpdaterClient.cpp \
+                      $(UPDATER_API_PATH)/include/UpdaterClient.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(LIBPATH) $(INCLUDES) -c $< -o $@ $(ENV)
 
 
 
 #
-#++++++++++++++++++++
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #   Q6
-#--------------------
+#------------------------------------------------------------------------------
 
 buildQ6: make_dir $(OBJECTS_Q6)
 	$(MBCC) $(MICROCFLAGS) $(INCLUDES) $(LIBPATH) src/*.c $(OBJECTS_Q6) -o bin/baby-cron -lshakespeare-mbcc -lcs1_utlsQ6
@@ -97,10 +102,11 @@ clean:
 
 
 #
-#++++++++++++++++++
-# UTest 
-#------------------
-UTEST_INCLUDES= -include ./tests/unit/stubs/file-stub.h -include ./tests/unit/stubs/time-stub.h
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# CppUTest  
+#------------------------------------------------------------------------------
+UTEST_INCLUDES= -include ./tests/unit/stubs/file-stub.h \
+                                        -include ./tests/unit/stubs/time-stub.h
 UNIT_TEST= tests/unit/crontab-test.cpp # tests/unit/baby-cron-test.cpp 
 
 #
@@ -114,38 +120,39 @@ UTEST_OBJECTS= bin/baby-cronUTEST.o bin/crontabUTEST.o bin/UpdaterClient.o bin/c
 
 
 bin/baby-cronUTEST.o: src/baby-cron.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $(UTEST_INCLUDES) $(LIBPATH)  -o $@ -c $^ $(LIBS) $(CPPUTEST_LIBS) $(ENV)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $(UTEST_INCLUDES) $(LIBPATH)  -o $@ -c $^ $(LIBS) $(UTEST_ENV) $(ENV)
 
 bin/configUTEST.o: src/config.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $(UTEST_INCLUDES) $(LIBPATH)  -o $@ -c $^ $(LIBS) $(CPPUTEST_LIBS) $(ENV)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $(UTEST_INCLUDES) $(LIBPATH)  -o $@ -c $^ $(LIBS) $(UTEST_ENV) $(ENV)
 
 bin/crontabUTEST.o: src/crontab.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $(UTEST_INCLUDES) $(LIBPATH)  -o $@ -c $^ $(LIBS) $(CPPUTEST_LIBS) $(ENV)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $(UTEST_INCLUDES) $(LIBPATH)  -o $@ -c $^ $(LIBS) $(UTEST_ENV) $(ENV)
 
 #
 # tests/unit/stubs
 #
 bin/config-stub.o : tests/unit/stubs/config-stub.cpp
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCLUDE_STUBS) $(LIBPATH) -o $@ -c $^ $(LIBS) $(CPPUTEST_LIBS) $(ENV)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCLUDE_STUBS) $(LIBPATH) -o $@ -c $^ $(LIBS) $(UTEST_ENV) $(ENV)
 
 bin/file-stub.o : tests/unit/stubs/file-stub.cpp
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCLUDE_STUBS) $(LIBPATH) -o $@ -c $^ $(LIBS) $(CPPUTEST_LIBS) $(ENV)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCLUDE_STUBS) $(LIBPATH) -o $@ -c $^ $(LIBS) $(UTEST_ENV) $(ENV)
 
 bin/time-stub.o : tests/unit/stubs/time-stub.cpp
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCLUDE_STUBS) $(LIBPATH)   -o $@ -c $^ $(LIBS) $(CPPUTEST_LIBS) $(ENV)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCLUDE_STUBS) $(LIBPATH)   -o $@ -c $^ $(LIBS) $(UTEST_ENV) $(ENV)
 
 #
 # tests/helpers
 #
 bin/tests-helpers.o : tests/helpers/src/tests-helpers.cpp
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCLUDE_STUBS) $(LIBPATH)   -o $@ -c $^ $(LIBS) $(CPPUTEST_LIBS) $(ENV)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCLUDE_STUBS) $(LIBPATH)   -o $@ -c $^ $(LIBS) $(UTEST_ENV) $(ENV)
 
 
 #
 # AllTests
 #
 bin/AllTests: tests/unit/AllTests.cpp  $(UNIT_TEST) $(UTEST_OBJECTS)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCLUDE_STUBS) $(LIBPATH)  -o $@  $^ $(LIBS)  $(ENV) $(CPPUTEST_LIBS) 
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEBUGFLAGS) $(INCLUDES) $(INCLUDE_STUBS) $(LIBPATH) \
+                                             -o $@  $^ $(LIBS)  $(ENV) $(UTEST_ENV) 
 
 
 #
