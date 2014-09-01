@@ -299,7 +299,7 @@ void load_crontab(const char *fileName)
             line->cl_failures = 0;
 
             #ifdef CS1_DEBUG
-                printf("cmd : %s\n", line->cl_cmd); fflush(stdout);
+                printf("[%s:%s] cmd : %s\n", __FILE__, __func__, line->cl_cmd); fflush(stdout);
             #endif
 
 			pline = &line->cl_next;
