@@ -152,6 +152,7 @@ void start_one_job(const char *user, CronLine *line)
 //		bb_setpgrp();
 
         Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, "About to execute " + string(line->cl_cmd));
+        fflush(g_fp_log);
 		//execl(DEFAULT_SHELL, DEFAULT_SHELL, "-c", line->cl_cmd, (char *) NULL);
 		execl(line->cl_cmd, line->cl_cmd, (char *) NULL);
 
@@ -164,13 +165,13 @@ void start_one_job(const char *user, CronLine *line)
         int status;
 		int r = waitpid(line->cl_pid, &status, WNOHANG); // prevent zombies
         if (r == pid) {
-                Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, "zombie r destroyed = "+r);
+            Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, "zombie r destroyed = "+r);
 
-                if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-                    process_finished_job(user, line);
+            if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+                process_finished_job(user, line);
 
-                    pid = 0;
-                }
+                pid = 0;
+            }
         }
     }
 	if (pid < 0) {
@@ -208,20 +209,17 @@ void start_jobs(void)
             }
 
             char failuremsg[LOG_BUFFER_SIZE];
-            sprintf(failuremsg,"%s "," pid=");
-            sprintf(failuremsg,"%ld ",(long)line->cl_pid);
-            sprintf(failuremsg,"%s "," failures=");
-            sprintf(failuremsg,"%d ",line->cl_failures);
-            sprintf(failuremsg,"%s "," cmd=");
-            sprintf(failuremsg,"%s ",line->cl_cmd);
+            snprintf(failuremsg, LOG_BUFFER_SIZE, "%s %ld %s %d %s %s", 
+                                    "pid= ", (long)line->cl_pid,
+                                    "failures= ", line->cl_failures,
+                                    "cmd= ", line->cl_cmd);
             Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, failuremsg);
 			
             start_one_job(file->cf_username, line);
 			pid = line->cl_pid;
 
             char pidreturned[LOG_BUFFER_SIZE];
-            sprintf(pidreturned,"%s","pid returned = ");
-            sprintf(pidreturned,"%3d\n", pid);
+            sprintf(pidreturned,"%s %3d", "pid returned= ", pid);
             Shakespeare::log(g_fp_log, Shakespeare::WARNING, PROCESS, pidreturned);
             line->cl_time_started = time(NULL);
 
@@ -266,7 +264,7 @@ void update_failures_state(CronFile *file, CronLine *line) {
 
         UpdaterClient client("sock_rollback");
 
-        client.Connect();
+        client.Connect(); // TODO if the UpdaterServer is not running baby-cron will crash
 
         if (client.Rollback(path) == 0) {
             line->cl_pid = -1;
@@ -310,12 +308,10 @@ int check_completions(void)
 			if (r < 0 || r == line->cl_pid) {
                 // exit(0) detected
                 char statusmsg[LOG_BUFFER_SIZE];
-                sprintf(statusmsg,"%s ","r=");
-                sprintf(statusmsg,"%d ",r);
-                sprintf(statusmsg,"%s "," pid=");
-                sprintf(statusmsg,"%ld ",(long)line->cl_pid);
-                sprintf(statusmsg,"%s "," status=");
-                sprintf(statusmsg,"%d ",status);
+                snprintf(statusmsg, LOG_BUFFER_SIZE, "%s %d %s %ld %s %d",
+                                        "r= ", r,
+                                        "pid= ", (long)line->cl_pid,
+                                        "status= ", status);
                 Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, statusmsg);
 
                 if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {

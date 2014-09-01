@@ -49,7 +49,7 @@ enum {
 # define SETENV_LEAKS 1
 #endif
 
-#define LOG_BUFFER_SIZE 100
+#define LOG_BUFFER_SIZE 500
 #ifdef G_FP_LOG
 FILE* g_fp_log;
 #else

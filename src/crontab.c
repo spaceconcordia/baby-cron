@@ -315,6 +315,11 @@ void load_crontab(const char *fileName)
 		}*/
 	}
 
+    /* TODO check if we have to free this ptr!
+	if (tokens) {
+        free(tokens);    
+    }//*/
+
 	config_close(parser);
 }
 
