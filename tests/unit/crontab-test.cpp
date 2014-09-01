@@ -134,6 +134,10 @@ TEST(CronTab, LoadCronTab_ValidFile_ReturnCronTabStruct) {
     for(int i = 0; i != 6; i++) {
         free(tokens[i]);
     }
-    free(tokens);
+
+    if (tokens) {
+        free(tokens);
+        tokens = 0;
+    }
 }
 //*/
