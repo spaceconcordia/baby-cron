@@ -7,6 +7,7 @@
 # 
 # PURPOSE : csmake template
 #           -g      Group
+#           -q      build for Q6
 #           -n      TestName
 #           -s      skip the tests
 #           -u      usage
