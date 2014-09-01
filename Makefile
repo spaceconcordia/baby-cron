@@ -37,17 +37,13 @@ INCLUDE_STUBS = -I./tests/unit/stubs -I./tests/helpers/include
 #--------------------
 LIBPATH = -L./lib  -L$(SPACE_LIB)/shakespeare/lib -L$(CPPUTEST_HOME)/lib \
                                                         -L$(SPACE_UTLS)/lib
-LIBS = -lshakespeare -lcs1_utls
-CPPUTEST_LIBS=-lCppUTest -lCppUTestExt 
 
 #
 # The test builds have their own main provided by CppUTest so we need to exclude baby-cron-main.c
 #
 DEBUG_SRC_FILES =`find src/ ! -name 'baby-cron-main.c' -name '*.c'`
 
-Q6_TAG=Q6
 OBJECTS= bin/UpdaterClient.o bin/baby-cron.o bin/config.o bin/crontab.o
-OBJECTS_Q6= bin/UpdaterClient$(Q6_TAG).o
 
 #
 # N.B. CppUTest will report 'Deallocating non-allocated memory' when a function like
@@ -60,6 +56,9 @@ ENV= -DCS1_DEBUG
 #++++++++++++++++++++
 #  x86 
 #--------------------
+LIBS = -lshakespeare -lcs1_utls
+CPPUTEST_LIBS=-lCppUTest -lCppUTestExt 
+
 make_dir:
 	mkdir -p bin
 
@@ -87,11 +86,27 @@ bin/UpdaterClient.o : $(UPDATER_API_PATH)/src/UpdaterClient.cpp \
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #   Q6
 #------------------------------------------------------------------------------
+LIBS_Q6 = -lshakespeare-mbcc -lcs1_utlsQ6
+Q6_TAG=Q6
+OBJECTS_Q6= bin/UpdaterClient$(Q6_TAG).o bin/baby-cron$(Q6_TAG).o bin/config$(Q6_TAG).o bin/crontab$(Q6_TAG).o
 
-buildQ6: make_dir $(OBJECTS_Q6)
-	$(MBCC) $(MICROCFLAGS) $(INCLUDES) $(LIBPATH) src/*.c $(OBJECTS_Q6) -o bin/baby-cron -lshakespeare-mbcc -lcs1_utlsQ6
+buildQ6: make_dir  bin/baby-cron$(Q6_TAG)
 
-bin/UpdaterClientQ6.o : $(UPDATER_API_PATH)/src/UpdaterClient.cpp $(UPDATER_API_PATH)/include/UpdaterClient.h
+bin/baby-cron$(Q6_TAG): src/baby-cron-main.c $(OBJECTS_Q6)
+	$(MBCC) $(MICROCFLAGS) $(INCLUDES) $(LIBPATH) -o $@ $^ $(LIBS_Q6) $(ENV)
+
+bin/baby-cron$(Q6_TAG).o: src/baby-cron.c
+	$(MBCC) $(MICROCFLAGS) $(INCLUDES) $(LIBPATH) -o $@ -c $^ $(LIBS_Q6) $(ENV)
+
+bin/config$(Q6_TAG).o: src/config.c
+	$(MBCC) $(MICROCFLAGS) $(INCLUDES) $(LIBPATH) -o $@ -c $^ $(LIBS_Q6) $(ENV)
+
+bin/crontab$(Q6_TAG).o: src/crontab.c
+	$(MBCC) $(MICROCFLAGS) $(INCLUDES) $(LIBPATH) -o $@ -c $^ $(LIBS_Q6) $(ENV)
+
+
+bin/UpdaterClient$(Q6_TAG).o : $(UPDATER_API_PATH)/src/UpdaterClient.cpp \
+                        $(UPDATER_API_PATH)/include/UpdaterClient.h
 	$(MBCC) $(CFLAGS) $(DEBUGFLAGS) $(LIBPATH)  $(INCLUDES) -c $< -o $@ $(ENV)
 
 #++++++++++++++++++

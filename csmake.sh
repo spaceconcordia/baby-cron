@@ -22,6 +22,7 @@ ALLTESTS="./bin/AllTests"
 ARGUMENTS=""
 GROUP=""
 TODEVNULL=1
+MBCC=0
 MULTIPLE_RUN=1
 CLEAN=0
 SKIP_TEST=0
@@ -33,6 +34,7 @@ usage()
     echo "usage : cscomtest.sh  [-u] [-g testGroup] [-n testName] [-m numberOfRuns][-v][-s]"
     echo "          -c clean before build"
     echo "          -m numberOfRuns : run the specified tests 'numberOfRuns' times and stop if error" 
+    echo "          -q build for Q6"
     echo "          -s skip the tests"
     echo "          -u usage"
     echo "          -v verbose : to get all DEBUG info (N.B. DEBUG info can be turned on/off in the makefile ... -DDEBUG)"
@@ -48,7 +50,7 @@ usage()
 # Parses command line arguments
 #
 argType=""
-while getopts "cg:n:uvm:s" opt; do
+while getopts "cqg:n:uvm:s" opt; do
     case "$opt" in
         c) CLEAN=1
         ;; 
@@ -57,6 +59,8 @@ while getopts "cg:n:uvm:s" opt; do
         m) MULTIPLE_RUN=$OPTARG
         ;;
         n) SINGLE_TEST="-n $OPTARG" 
+        ;;
+        q) MBCC=1
         ;;
         s) SKIP_TEST=1 
         ;;
@@ -89,24 +93,60 @@ if [ $CLEAN -eq 1 ]; then
     make clean || exit 1
 fi
 
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#
+# Build x86 
+#
+#------------------------------------------------------------------------------
 echo ""
-echo "=== Build tests ==="
-make test
+echo "=== Build x86 ==="
+make buildBin 
 
 if [ $? -ne 0 ]; then
-    echo -e "\e[31m Build failed\e[0m"
+    echo -e "\e[31m Build x86 failed\e[0m"
     exit -1
 else
-    echo -e "\e[32m Build success!\e[0m"
+    echo -e "\e[32m Build x86 success!\e[0m"
 fi
-
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #
-# PURPOSE : run the tests
+# Build mbcc 
+#
+#------------------------------------------------------------------------------
+if [ $MBCC -ne 0 ]; then
+    echo ""
+    echo "=== Build mbcc ==="
+    make buildQ6 
+
+    if [ $? -ne 0 ]; then
+        echo -e "\e[31m Build mbcc failed\e[0m"
+        exit -1
+    else
+        echo -e "\e[32m Build mbcc success!\e[0m"
+    fi
+fi
+
+
+
+#
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#
+# PURPOSE : run/build the tests
 #
 #-----------------------------------------------------------------------------
 if [ $SKIP_TEST -eq 0 ]; then
+    echo ""
+    echo "=== Build tests ==="
+    make test
+
+    if [ $? -ne 0 ]; then
+        echo -e "\e[31m Build tests failed\e[0m"
+        exit -1
+    else
+        echo -e "\e[32m Build tests success!\e[0m"
+    fi
+
     echo ""
     echo "=== Run tests ==="
 
