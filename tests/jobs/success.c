@@ -10,6 +10,7 @@ int main(void) {
     FILE *g_fp_log = Shakespeare::open_log(folder, "Baby-Cron-TestJob");
     Shakespeare::log(g_fp_log, Shakespeare::NOTICE, "Baby-Cron-TestJob", "tests/jobs/success job executing");
     fflush(g_fp_log);
+    fclose(g_fp_log);
 
     return 0;
 }
