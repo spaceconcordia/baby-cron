@@ -1,6 +1,7 @@
-#include "config.h"
 #include <string.h>
+
 #include "baby-cron.h"
+#include "config.h"
 #include "shakespeare.h"
 
 parser_t* FAST_FUNC config_open2(const char *filename, FILE* FAST_FUNC (*fopen_func)(const char *path))
@@ -174,7 +175,7 @@ int config_read(parser_t *parser, char **tokens, unsigned flags, const char *del
 	if (t < mintokens) {
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "bad line %u: %d tokens found, %d needed", parser->lineno, t, mintokens);
-        Shakespeare::log(g_fp_log, Shakespeare::ERROR, "Baby-Cron", string(msg));
+        Shakespeare::log_3(Shakespeare::ERROR, "Baby-Cron", string(msg));
 
 		//if (flags & PARSE_MIN_DIE)
 		//	xfunc_die();

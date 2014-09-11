@@ -2,11 +2,11 @@
  * Modified version of crond from http://www.busybox.net/
  *
  * */
+#include <dirent.h>
 
 #include "baby-cron.h"
-#include "crontab.h"
 #include "config.h"
-#include <dirent.h>
+#include "crontab.h"
 #include "shakespeare.h"
 
 char bb_common_bufsiz1[COMMON_BUFSIZE] ALIGNED(sizeof(long long));
@@ -161,7 +161,7 @@ void ParseField(char *user, char *ary, int modvalue, int off,
  err:
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "user %s: parse error at %s", user, base);
-        Shakespeare::log(g_fp_log, Shakespeare::WARNING, "Baby-Cron", string(msg));
+        Shakespeare::log_3(Shakespeare::WARNING, "Baby-Cron", string(msg));
 
 		return;
 	}
@@ -206,7 +206,7 @@ FILE* FAST_FUNC fopen_or_warn(const char *path, const char *mode)
 	if (!fp) {
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "Can't fopen the file : %s", path);
-        Shakespeare::log(g_fp_log, Shakespeare::ERROR, "Baby-Cron", string(msg));
+        Shakespeare::log_3(Shakespeare::ERROR, "Baby-Cron", string(msg));
 
 		//errno = 0; /* why? */
 	}
@@ -330,7 +330,7 @@ void rescan_crontab_dir(void)
 	if (chdir(G.crontab_dir_name) < 0) {
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "chdir(%s)", G.crontab_dir_name);
-        Shakespeare::log(g_fp_log, Shakespeare::ERROR, "Baby-Cron", string(msg));
+        Shakespeare::log_3(Shakespeare::ERROR, "Baby-Cron", string(msg));
 	}
 
 	/* Scan directory and add associated users */
@@ -341,7 +341,7 @@ void rescan_crontab_dir(void)
         if (!dir){
             char msg[LOG_BUFFER_SIZE];
             sprintf(msg, "chdir(%s)", ".");
-            Shakespeare::log(g_fp_log, Shakespeare::ERROR, "Baby-Cron", string(msg));
+            Shakespeare::log_3(Shakespeare::ERROR, "Baby-Cron", string(msg));
             exit(-1);
         }
 

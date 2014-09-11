@@ -1,13 +1,13 @@
-#include <baby-cron.h>
-#include <crontab.h>
 #include <string>
 #include <cstring>
 #include <unistd.h>
 #include <time.h>
 
+#include "baby-cron.h"
+#include "crontab.h"
 #include "shakespeare.h"
-#include "SpaceDecl.h"
 #include "UpdaterClient.h"
+#include "SpaceDecl.h"
 
 using namespace std; // Yes, we are compiling a C file with g++
 const int SLEEP_TIME = 15;
@@ -36,10 +36,7 @@ void signal_watch_puppy() {
 }
 
 int main(void) {
-    string folder = CS1_LOGS;
-    g_fp_log = Shakespeare::open_log(folder, "Baby-Cron");
-    Shakespeare::log(g_fp_log, Shakespeare::NOTICE, "Baby-Cron", "Starting");
-    fflush(g_fp_log);
+    Shakespeare::log_3(Shakespeare::NOTICE, "Baby-Cron", "Starting");
 
 	time_t t2;
 	INIT_G();
@@ -82,6 +79,5 @@ int main(void) {
 	 	}
 	} /* for (;;) */
 
-    fclose(g_fp_log);
     return 0;
 }

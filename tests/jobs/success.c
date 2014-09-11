@@ -5,12 +5,9 @@
  ******************************************************************************/
 #include <stdio.h>
 #include "shakespeare.h"
-int main(void) {
-    string folder   = "/home/logs/";
-    FILE *g_fp_log = Shakespeare::open_log(folder, "Baby-Cron-TestJob");
-    Shakespeare::log(g_fp_log, Shakespeare::NOTICE, "Baby-Cron-TestJob", "tests/jobs/success job executing");
-    fflush(g_fp_log);
-    fclose(g_fp_log);
+int main(void) 
+{
+    Shakespeare::log_3(Shakespeare::NOTICE, "Baby-Cron-TestJob", "tests/jobs/success job executing");
 
     return 0;
 }

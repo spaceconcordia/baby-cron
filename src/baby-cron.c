@@ -1,18 +1,18 @@
-#define G_FP_LOG  
 /*
  * Modified version of crond from  http://www.busybox.net/
  *
  * */
 
 #include <errno.h>
-#include "baby-cron.h"
-#include "crontab.h"
 #include <time.h>
 #include <signal.h>
 #include <sys/types.h>
+
+#include "baby-cron.h"
+#include "crontab.h"
 #include "shakespeare.h"
+#include "UpdaterClient.h"
 #include "SpaceDecl.h"
-#include <UpdaterClient.h>
 
 #define PROCESS "Baby-Cron"
 
@@ -85,13 +85,13 @@ void flag_starting_jobs(time_t t1, time_t t2)
 					if (DebugOpt) {
                         char msg[LOG_BUFFER_SIZE];
                         sprintf(msg, "job: %d %s", (int)line->cl_pid, line->cl_cmd);
-                        Shakespeare::log(g_fp_log, Shakespeare::DEBUG, PROCESS, string(msg));
+                        Shakespeare::log_3(Shakespeare::DEBUG, PROCESS, string(msg));
 					}
 
 					if (line->cl_pid > 0) {
                         char msg[LOG_BUFFER_SIZE];
                         sprintf(msg, "user %s: process already running: %s", file->cf_username, line->cl_cmd);
-                        Shakespeare::log(g_fp_log, Shakespeare::WARNING, PROCESS, string(msg));
+                        Shakespeare::log_3(Shakespeare::WARNING, PROCESS, string(msg));
 					} else if (line->cl_pid == 0) {
 						line->cl_pid = -1;
 						file->cf_wants_starting = 1;
@@ -131,7 +131,7 @@ void start_one_job(const char *user, CronLine *line)
 	if (!pas) {
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "can't get uid for %s", user);
-        Shakespeare::log(g_fp_log, Shakespeare::WARNING, PROCESS, string(msg));
+        Shakespeare::log_3(Shakespeare::WARNING, PROCESS, string(msg));
 		goto err;
 	}
 
@@ -151,21 +151,21 @@ void start_one_job(const char *user, CronLine *line)
 		/* crond 3.0pl1-100 puts tasks in separate process groups */
 //		bb_setpgrp();
 
-        Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, "About to execute " + string(line->cl_cmd));
-        fflush(g_fp_log);
+        Shakespeare::log_3(Shakespeare::NOTICE, PROCESS, "About to execute " + string(line->cl_cmd));
+
 		//execl(DEFAULT_SHELL, DEFAULT_SHELL, "-c", line->cl_cmd, (char *) NULL);
 		execl(line->cl_cmd, line->cl_cmd, (char *) NULL);
 
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "can't execute '%s' for user %s", DEFAULT_SHELL, user);
-        Shakespeare::log(g_fp_log, Shakespeare::ERROR, PROCESS, string(msg));
+        Shakespeare::log_3(Shakespeare::ERROR, PROCESS, string(msg));
 
         _exit(EXIT_SUCCESS);
 	} else if (pid > 0) {
         int status;
 		int r = waitpid(line->cl_pid, &status, WNOHANG); // prevent zombies
         if (r == pid) {
-            Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, "zombie r destroyed = "+r);
+            Shakespeare::log_3(Shakespeare::NOTICE, PROCESS, "zombie r destroyed = "+r);
 
             if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
                 process_finished_job(user, line);
@@ -178,7 +178,7 @@ void start_one_job(const char *user, CronLine *line)
 		/* FORK FAILED */
         char msg[LOG_BUFFER_SIZE];
         sprintf(msg, "can't vfork");
-        Shakespeare::log(g_fp_log, Shakespeare::ERROR, PROCESS, string(msg));
+        Shakespeare::log_3(Shakespeare::ERROR, PROCESS, string(msg));
  err:
 		pid = 0;
 	}
@@ -213,19 +213,19 @@ void start_jobs(void)
                                     "pid= ", (long)line->cl_pid,
                                     "failures= ", line->cl_failures,
                                     "cmd= ", line->cl_cmd);
-            Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, failuremsg);
+            Shakespeare::log_3(Shakespeare::NOTICE, PROCESS, failuremsg);
 			
             start_one_job(file->cf_username, line);
 			pid = line->cl_pid;
 
             char pidreturned[LOG_BUFFER_SIZE];
             sprintf(pidreturned,"%s %3d", "pid returned= ", pid);
-            Shakespeare::log(g_fp_log, Shakespeare::WARNING, PROCESS, pidreturned);
+            Shakespeare::log_3(Shakespeare::WARNING, PROCESS, pidreturned);
             line->cl_time_started = time(NULL);
 
             char msg[LOG_BUFFER_SIZE];
             sprintf(msg, "USER %s pid %3d cmd %s", file->cf_username, (int)pid, line->cl_cmd);
-            Shakespeare::log(g_fp_log, Shakespeare::WARNING, PROCESS, string(msg));
+            Shakespeare::log_3(Shakespeare::WARNING, PROCESS, string(msg));
 
 			if (pid < 0) {
 				file->cf_wants_starting = 1;
@@ -258,7 +258,7 @@ void update_failures_state(CronFile *file, CronLine *line) {
         char* lastSlash = strrchr(path, '/');
         *lastSlash  = '\0';
 
-        Shakespeare::log(g_fp_log, Shakespeare::DEBUG, PROCESS, "path to rollback : " + string(path));
+        Shakespeare::log_3(Shakespeare::DEBUG, PROCESS, "path to rollback : " + string(path));
 
 	    chdir("/home/apps/current/space-updater-api");          // Because sockets are created in the current directory.
 
@@ -312,10 +312,10 @@ int check_completions(void)
                                         "r= ", r,
                                         "pid= ", (long)line->cl_pid,
                                         "status= ", status);
-                Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, statusmsg);
+                Shakespeare::log_3(Shakespeare::NOTICE, PROCESS, statusmsg);
 
                 if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-                    Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, "exited with status");
+                    Shakespeare::log_3(Shakespeare::NOTICE, PROCESS, "exited with status");
                     process_finished_job(file->cf_username, line);
 
                    if (line->cl_pid == 0) { continue; }
@@ -332,11 +332,11 @@ int check_completions(void)
                // int resultkill = 0;
                 char msg[LOG_BUFFER_SIZE];
                 sprintf(msg, "kill %d", line->cl_pid);
-                Shakespeare::log(g_fp_log, Shakespeare::NOTICE, PROCESS, msg);
+                Shakespeare::log_3(Shakespeare::NOTICE, PROCESS, msg);
                 //execl(msg, (char*)NULL);
 
                 sprintf(msg, "failed %3d %3d %d", line->cl_pid, line->cl_failures, resultkill);
-                Shakespeare::log(g_fp_log, Shakespeare::ERROR, PROCESS, string(msg));
+                Shakespeare::log_3(Shakespeare::ERROR, PROCESS, string(msg));
                 update_failures_state(file, line);
                 continue;
             }

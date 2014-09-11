@@ -50,11 +50,6 @@ enum {
 #endif
 
 #define LOG_BUFFER_SIZE 500
-#ifdef G_FP_LOG
-FILE* g_fp_log;
-#else
-extern FILE* g_fp_log;
-#endif
 
 #define ARRAY_SIZE(x) ((unsigned)(sizeof(x) / sizeof((x)[0])))
 void* xmalloc(size_t size) FAST_FUNC RETURNS_MALLOC;
