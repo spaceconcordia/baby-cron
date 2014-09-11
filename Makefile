@@ -28,7 +28,9 @@ DEBUGFLAGS=-ggdb -g -gdwarf-2 -g3 #gdwarf-2 + g3 provides macro info to gdb
 # includes
 #--------------------
 INCLUDES = -I./include -I$(SPACE_LIB)/include -I$(UPDATER_API_PATH)/include \
-                                              -I$(CPPUTEST_HOME)/include
+                                              -I$(CPPUTEST_HOME)/include \
+                                              -I$(SPACE_LIB)/shakespeare/inc
+
 INCLUDE_STUBS = -I./tests/unit/stubs -I./tests/helpers/include
 
 #
